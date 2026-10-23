@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 依赖与密钥
+node_modules/
+.env
+*.key
+secrets.yaml
+
+# 缓存与临时文件
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+report.json

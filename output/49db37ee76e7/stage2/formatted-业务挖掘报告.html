@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="docx-page-size" content="A4">
+<title>业务挖掘报告 · 场馆排期与需求变更</title>
+<style>
+  /* 页面规则：正文页脚居中页码；封面无页脚 */
+  @page {
+    @bottom-center { content: "第 " counter(page) " 页"; }
+  }
+  @page cover {
+    @bottom-center { content: none; }
+  }
+  section[role="cover"] { page: cover; }
+
+  :root {
+    --color-primary: #1a4f8b;
+    --color-text: #000000;
+    --color-muted: #666666;
+    --color-border: #cccccc;
+    --color-bg: #ffffff;
+    --color-highlight: #f5f7fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "SimSun", "宋体", serif; font-size: 12pt; line-height: 1.7; color: var(--color-text); background: var(--color-bg); }
+
+  .report-cover {
+    display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+    min-height: 62vh; padding: 2.5cm; background: var(--color-highlight);
+  }
+  .cover-category { font-size: 14pt; font-family: "SimHei", "黑体", sans-serif; font-weight: bold; color: var(--color-primary); letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .cover-title { font-size: 28pt; font-family: "SimHei", "黑体", sans-serif; font-weight: bold; color: var(--color-primary); margin-bottom: 0.5em; }
+  .cover-subtitle { font-size: 15pt; color: var(--color-muted); margin-bottom: 2em; }
+  .cover-meta { font-size: 10pt; color: var(--color-muted); }
+
+  .doc-toc { padding: 1em 2.5cm; background: var(--color-bg); border-bottom: 1px solid var(--color-border); }
+  .toc-title { font-weight: bold; margin-bottom: 0.5em; font-family: "SimHei", "黑体", sans-serif; font-size: 16pt; }
+  .toc-list, .toc-list ol, .toc-list ul { list-style: none; list-style-type: none; padding-left: 1.5em; }
+  .toc-list li { margin-bottom: 0.3em; text-indent: 0; }
+  .toc-list a { color: var(--color-primary); text-decoration: none; }
+
+  .report-body { padding: 1.5em 2.5cm; }
+  .report-body h1 { font-size: 18pt; font-family: "SimHei", "黑体", sans-serif; font-weight: bold; margin-top: 1.8em; margin-bottom: 0.8em; color: var(--color-primary); }
+  .report-body h2 { font-size: 14pt; font-family: "SimHei", "黑体", sans-serif; font-weight: bold; margin-top: 1.2em; margin-bottom: 0.6em; }
+  .report-body p { margin-bottom: 0.8em; text-indent: 2em; }
+  .report-body li { margin-bottom: 0.4em; text-indent: 0; }
+  .report-body table { width: 100%; border-collapse: collapse; margin-bottom: 1em; font-size: 10.5pt; }
+  .report-body th, .report-body td { padding: 0.5em 0.8em; border: 1px solid var(--color-border); text-align: left; }
+  .report-body th { background: var(--color-highlight); font-family: "SimHei", "黑体", sans-serif; }
+  .src-note { font-size: 10pt; color: var(--color-muted); background: var(--color-highlight); padding: 0.6em 1em; border-left: 4px solid var(--color-primary); margin-bottom: 1em; text-indent: 0; }
+  .quote-block { background: var(--color-highlight); border-left: 4px solid var(--color-primary); padding: 0.8em 1em; margin-bottom: 1em; text-indent: 0; }
+</style>
+</head>
+<body>
+  <section role="cover" class="report-cover">
+    <p class="cover-category">业务需求发现 · 交付文档</p>
+    <p class="cover-title">业务挖掘报告</p>
+    <p class="cover-subtitle">场馆排期与需求变更 · 上海东浩会展经营有限公司（演练）</p>
+    <div class="cover-meta">
+      <p>来源：实验室系统（fde-simulation）生成成果整理 | 2026年10月 | v1.0</p>
+    </div>
+  </section>
+
+  <section role="cover">
+    <nav class="doc-toc" aria-label="文档目录">
+      <p class="toc-title">目录</p>
+      <ol class="toc-list">
+        <li><a href="#section-1">一、业务机会清单</a>
+          <ol>
+            <li><a href="#section-1-1">1.1 机会结论</a></li>
+            <li><a href="#section-1-5">1.5 不做范围</a></li>
+          </ol>
+        </li>
+        <li><a href="#section-2">二、指标基线与价值假设</a>
+          <ol>
+            <li><a href="#section-2-1">2.1 指标口径</a></li>
+            <li><a href="#section-2-3">2.3 价值假设</a></li>
+          </ol>
+        </li>
+        <li><a href="#section-3">三、项目章程与利益相关者地图</a></li>
+        <li><a href="#section-4">四、候选需求与优先级</a></li>
+        <li><a href="#section-5">五、调查覆盖与证据缺口</a></li>
+        <li><a href="#section-6">六、关卡评审记录</a></li>
+      </ol>
+    </nav>
+  </section>
+
+  <section role="body" class="report-body" data-page-restart="1">
+    <p class="src-note">报告说明：本报告基于实验室系统（fde-simulation 演练平台）生成的业务挖掘成果整理。企业名称与公开业务方向有公开来源；人物、指标和业务问题为演练虚构，不代表集团或成员企业实际情况。本报告中的需求均为待验证假设。</p>
+
+    <h1 id="section-1">一、业务机会清单</h1>
+    <h2 id="section-1-1">1.1 机会结论</h2>
+    <p>问题不在"要不要上 AI 排期"，而在档期申请链路的交接点：版本、未结项与责任在交接时丢失，导致重复核对。机会在于在提交与交接节点增加"冲突提示 + 三项齐套检查 + 来源留痕"，把重复核对从逐项比对降为一次核对。</p>
+    <h2>1.2 触发事件</h2>
+    <p>一线：排期表与邮件需求对不上，临时变更靠人工逐项核对，还要记清发生节点与受影响对象（f10）；两活动撤场/进场在同一装卸口时间重叠时，必须翻原始版本才能判断责任（f11）。</p>
+    <p>流程：交接必须记录接收人、版本与未结项，不能只发"已处理"（f20、f23）。</p>
+    <p>系统：服务台/台账/文件库三类工具、无统一关联编号（f30）；场馆区域、时间窗、进撤场时长、版本、占档状态口径需统一，且缺失值与未确认值分开（f31）。</p>
+    <h2>1.3 机会描述</h2>
+    <p>在"意向询期 → 占档确认 → 合同审核 → 进撤场计划"链路的各交接点，引入只读的冲突提示能力：只提示排期冲突、不自动锁档，每条提示说明原因并携带来源，配合交接三项齐套检查，减少下游重复核对。</p>
+    <h2>1.4 维持现状的损失</h2>
+    <p>重复核对工时、冲突晚发现的改场/加急成本、责任判定争议（结构性判断；访谈中"45 单/月、35 分钟/单"为虚构样本，不作基线，见 REQ-6）。</p>
+    <h2 id="section-1-5">1.5 不做范围</h2>
+    <p>不锁档、不签约、不承诺容量、不自动对外承诺（f05、f52）；演练结果不作业务指令（f40）。</p>
+    <h2>1.6 待验证项</h2>
+    <p>各交接点耗时占比、改期与投诉频次。</p>
+
+    <h1 id="section-2">二、指标基线与价值假设</h1>
+    <h2 id="section-2-1">2.1 指标口径</h2>
+    <table>
+      <tr><th>指标</th><th>口径定义</th></tr>
+      <tr><td>处理时长</td><td>意向询期 → 进撤场计划确认的自然耗时</td></tr>
+      <tr><td>返工次数</td><td>同一申请因版本/信息不一致被退回或重排的次数</td></tr>
+      <tr><td>版本正确率</td><td>复核时引用版本与最新版本一致的比例</td></tr>
+      <tr><td>采用率</td><td>试点批次使用冲突提示的申请占比</td></tr>
+      <tr><td>人工复核成本</td><td>单人时 × 复核次数</td></tr>
+    </table>
+    <h2>2.2 基线状态</h2>
+    <p>当前无核实台账，基线为空；访谈中"45 单/月、35 分钟/单"为虚构样本，仅作练习，不得对外引用（REQ-6）。计划先测一周基线再与试点对比。</p>
+    <h2 id="section-2-3">2.3 价值假设</h2>
+    <p>H1：三项齐套检查（接收人/版本/未结项）可减少重复核对（f20、f23、f10）。</p>
+    <p>H2：30 样本回放能识别全部已标注冲突并说明原因（f02），把冲突发现前移。</p>
+    <p>H3：来源与人工复核留痕（f40、f41）可降低审核返工。</p>
+    <h2>2.4 测量计划</h2>
+    <p>试点批次固定 30 个样本，按申请记录上述 5 项指标；缺失与估计值单列。</p>
+    <h2>2.5 止损与回退</h2>
+    <p>召回不达标、出现越权锁档、无法追溯版本即停试；停止权在傅景（f04）。</p>
+
+    <h1 id="section-3">三、项目章程与利益相关者地图</h1>
+    <h2>3.1 目标与范围</h2>
+    <p>目标：减少重复核对，保留人工确认与可追溯来源（f00）。范围：单批次场馆档期申请；只提示冲突，不锁档、不签约、不承诺容量（f05）。</p>
+    <h2>3.2 验收标准</h2>
+    <p>30 个样本回放识别全部已标注冲突并说明原因（f02）；每条结果附来源与人工复核记录（f41）。</p>
+    <h2>3.3 决策链</h2>
+    <p>结果承担与范围决定 = 顾明岚（业务负责人）；停止试点权 = 傅景（审核与质量）；结果用途确认 = 叶书（客户协同）；预算审批人待核实。</p>
+    <h2>3.4 RACI 分工</h2>
+    <table>
+      <tr><th>职责域</th><th>责任人</th></tr>
+      <tr><td>流程与交接</td><td>唐映秋（项目流程协调员）</td></tr>
+      <tr><td>数据与只读接口</td><td>秦芮（数字化工程师）</td></tr>
+      <tr><td>一线执行与复核</td><td>林亦舟（一线服务专员）</td></tr>
+      <tr><td>审核标准</td><td>傅景（审核与质量负责人）</td></tr>
+      <tr><td>客户口径</td><td>叶书（客户协同代表）</td></tr>
+    </table>
+    <h2>3.5 风险与红线</h2>
+    <p>销售延长使用与运营保留恢复时间的口径冲突（f50、f52）须先书面统一；来源不清的申请不得进入正式流转（f40）；跨企业资料访问须授权（f41）；演练结果不得作为业务指令。</p>
+    <h2>3.6 里程碑</h2>
+    <p>口径与样本确认 → 只读原型 → 30 样本回放 → 单批次试点评审。待核实：审批人清单、接口读写权限、预算口径。</p>
+
+    <h1 id="section-4">四、候选需求与优先级</h1>
+    <table>
+      <tr><th>编号</th><th>需求假设</th><th>优先级</th><th>责任人</th><th>下一步验证</th></tr>
+      <tr><td>REQ-1</td><td>交接点版本与未结项信息缺失是重复核对的主要来源</td><td>P0</td><td>唐映秋</td><td>按 f01 链路逐交接点观察记录三项是否齐全</td></tr>
+      <tr><td>REQ-2</td><td>跨工具无统一关联编号导致跨系统比对只能人工完成</td><td>P0</td><td>秦芮</td><td>脱敏只读导出，验证关键字段能否按申请串联</td></tr>
+      <tr><td>REQ-3</td><td>冲突提示需保留来源与人工复核记录才可被审核接受</td><td>P0</td><td>傅景</td><td>30 样本回放中为每条结果附来源与复核记录</td></tr>
+      <tr><td>REQ-4</td><td>销售与运营的时间口径需先统一，否则冲突提示无法落地</td><td>P1</td><td>叶书</td><td>形成冲突上报与交接责任清单草案</td></tr>
+      <tr><td>REQ-5</td><td>试点治理需明确范围决定权、停止权与用途确认三方分工</td><td>P1</td><td>顾明岚</td><td>试点启动前书面确认职责与停止条件</td></tr>
+      <tr><td>REQ-6</td><td>耗时与损失口径未建立，改进效果暂不可量化</td><td>P2</td><td>顾明岚</td><td>先确定损失口径，再记录基线</td></tr>
+    </table>
+
+    <h1 id="section-5">五、调查覆盖与证据缺口</h1>
+    <p>调查覆盖 15/36 条事实（42%）。主要证据缺口包括：试点预算与成本核算口径（顾明岚）；单量与耗时统计样本、现场设备网络、复核方式（林亦舟）；材料模板、审批权限清单、业务规则维护（唐映秋）；接口读写能力、数据质量判断、更新频率与故障处置（秦芮）；留存期限、兜底转人工、审计凭证（傅景）；投诉处理与反馈闭环（叶书）。</p>
+
+    <h1 id="section-6">六、关卡评审记录</h1>
+    <div class="quote-block">
+      <p>关卡：业务负责人确认问题、指标口径与调查范围。评审结论：通过（2026-10-23）。</p>
+      <p>保留条件：基线为空，耗时/单量/损失金额/审批人清单/接口权限待验证；异常接手按类型细分；预算审批人缺失前不进入采购与对外承诺。</p>
+      <p>实验室系统评分：86/100。待改进：引用编号来源需按允许证据列表核对；基线为空，价值假设缺少可证伪阈值；待核实项缺少责任人与截止时间。</p>
+    </div>
+  </section>
+</body>
+</html>

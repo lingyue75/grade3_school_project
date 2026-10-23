@@ -1,0 +1,17 @@
+{
+  "theme": "business-modern",
+  "genre": "business-report",
+  "palette": {
+    "primary": "#1a4f8b",
+    "text": "#000000",
+    "muted": "#666666",
+    "border": "#cccccc",
+    "highlight": "#f5f7fa"
+  },
+  "typography": {
+    "headingFamily": "SimHei",
+    "bodyFamily": "SimSun",
+    "bodySize": "12pt",
+    "lineHeight": 1.7
+  }
+}

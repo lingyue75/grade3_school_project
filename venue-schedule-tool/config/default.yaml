@@ -1,0 +1,18 @@
+# 默认参数（非机密配置）
+
+# 冲突判定
+conflict:
+  include_setup_teardown: true      # 时间窗比较是否含进撤场时长（f31）
+  judge_unconfirmed: true           # unconfirmed 档期参与判定；missing 永不参与
+  auto_lock: false                  # 恒为 false：不自动锁档（f05/f52）
+
+# 交接齐套三项（f20/f23）
+handover_required_items:
+  - receiver
+  - version
+  - open_items
+
+# 复核与授权（f40/f41）
+review:
+  require_source: true              # 无来源提示不得进入正式流转
+  authorized_reviewers: []          # 授权人员清单由审核与质量负责人维护，默认收紧为空
