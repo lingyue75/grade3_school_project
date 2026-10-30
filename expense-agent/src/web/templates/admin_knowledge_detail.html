@@ -1,0 +1,47 @@
+{% extends "admin_base.html" %}
+{% block title %}分片预览{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>分片预览 · {{ doc.title }}</h2>
+  <a class="btn btn-sm" href="/admin/knowledge">返回列表</a>
+</div>
+
+<div class="card">
+  <div class="row-between">
+    <div>
+      <span class="tag">{{ doc.source_type }}</span>
+      <span class="tag tag-{% if doc.status == 'ready' %}ok{% elif doc.status == 'failed' %}danger{% else %}warn{% endif %}">
+        {{ doc.status }}</span>
+      <span class="muted" style="margin-left:8px">共 {{ total }} 个分片 · 上传时间 {{ doc.created_at }}</span>
+    </div>
+  </div>
+  {% if doc.error_text %}<div class="alert alert-error" style="margin-top:10px">{{ doc.error_text }}</div>{% endif %}
+  <div class="muted" style="margin-top:8px">
+    切片质量直接决定检索准确率。请重点检查：一个分片是否只讲一件事、条款号是否正确、表格是否被切断。
+  </div>
+</div>
+
+<div class="card">
+  <h3>分片列表（第 {{ page }} 页）</h3>
+  {% for c in chunks %}
+  <div style="border:1px solid var(--line);border-radius:6px;padding:10px;margin-bottom:8px;background:#fafbfc">
+    <div class="row-between">
+      <div>
+        <span class="tag tag-info">#{{ c.chunk_index }}</span>
+        {% if c.clause_no %}<span class="tag">条款 {{ c.clause_no }}</span>{% endif %}
+        <span class="muted">{{ c.heading_path }}</span>
+      </div>
+      <span class="muted">{{ c.text|length }} 字</span>
+    </div>
+    <div style="margin-top:6px;white-space:pre-wrap;font-size:13px">{{ c.text }}</div>
+  </div>
+  {% else %}
+  <div class="empty">该文档暂无分片</div>
+  {% endfor %}
+
+  <div style="margin-top:12px">
+    {% if page > 1 %}<a class="btn btn-sm" href="/admin/knowledge/{{ doc.id }}?page={{ page - 1 }}">上一页</a>{% endif %}
+    {% if chunks|length == size %}<a class="btn btn-sm" href="/admin/knowledge/{{ doc.id }}?page={{ page + 1 }}">下一页</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

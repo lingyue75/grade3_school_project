@@ -1,0 +1,79 @@
+{% extends "admin_base.html" %}
+{% block title %}编辑模板{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>模板 v{{ tpl.version_no }} · {{ tpl.name }}</h2>
+  <div>
+    <span class="tag tag-{% if tpl.is_active %}ok{% elif tpl.status == 'draft' %}warn{% else %}info{% endif %}">
+      {% if tpl.is_active %}生效中{% elif tpl.status == 'draft' %}草稿{% else %}{{ tpl.status }}{% endif %}</span>
+    <a class="btn btn-sm" href="/admin/prompts">返回列表</a>
+  </div>
+</div>
+
+<div class="card">
+  <h3>模板正文</h3>
+  <textarea id="content" rows="12" {% if tpl.status != 'draft' %}disabled{% endif %}>{{ tpl.content }}</textarea>
+  {% if tpl.status != 'draft' %}
+  <div class="alert alert-info" style="margin-top:10px">
+    已发布版本不可修改（错误码 5303）：修改历史提示词会让旧问答无法回放。请新建版本后再发布。
+  </div>
+  {% endif %}
+  <div class="toolbar" style="margin-top:10px">
+    <input id="name" style="width:220px" value="{{ tpl.name }}" placeholder="模板名称">
+    <button class="btn" id="btn-save" {% if tpl.status != 'draft' %}disabled{% endif %}>保存草稿</button>
+    <button class="btn btn-primary" id="btn-publish">发布并生效</button>
+  </div>
+  <div class="muted">发布后缓存立即失效，员工下一次问答即使用新模板；历史消息仍记录其当时所用版本。</div>
+</div>
+
+<div class="card">
+  <h3>在线试问</h3>
+  <div class="toolbar">
+    <input id="q" style="flex:1" placeholder="用该模板试问一句，例如：P3 职级去北京住宿标准是多少？">
+    <button class="btn" id="btn-try">试问</button>
+  </div>
+  <div id="try-out" style="white-space:pre-wrap;font-size:13px"></div>
+  <div id="try-src" style="margin-top:8px"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const TPL_ID = "{{ tpl.id }}";
+
+document.getElementById('btn-save').onclick = async () => {
+  const r = await fetch('/api/v1/admin/prompts/' + TPL_ID, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: document.getElementById('name').value,
+                           content: document.getElementById('content').value }),
+  });
+  const j = await r.json();
+  if (j.code === 0) toast('草稿已保存'); else toast('保存失败：' + j.message, false);
+};
+
+document.getElementById('btn-publish').onclick = async () => {
+  const j = await apiForm('/api/v1/admin/prompts/' + TPL_ID + '/publish', {});
+  if (j.code === 0) { toast('已发布并生效'); setTimeout(() => location.reload(), 600); }
+  else toast('发布失败：' + j.message, false);
+};
+
+document.getElementById('btn-try').onclick = async () => {
+  const q = document.getElementById('q').value.trim();
+  if (!q) return;
+  const r = await fetch('/api/v1/admin/prompts/' + TPL_ID + '/try', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q }),
+  });
+  const j = await r.json();
+  const out = document.getElementById('try-out'), src = document.getElementById('try-src');
+  if (j.code !== 0) { out.textContent = '试问失败：' + j.message; return; }
+  out.textContent = j.data.answer + `（耗时 ${j.data.latency_ms}ms）`;
+  src.innerHTML = '';
+  (j.data.sources || []).forEach((s, i) => {
+    const d = document.createElement('div');
+    d.className = 'src-item';
+    d.textContent = `[${i + 1}] ${s.file}${s.clause_no ? ' 条款' + s.clause_no : ''} · ${s.text.slice(0, 100)}`;
+    src.appendChild(d);
+  });
+};
+</script>
+{% endblock %}

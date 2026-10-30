@@ -1,0 +1,17 @@
+# ---- 核心（必装）----
+fastapi>=0.110
+uvicorn[standard]>=0.27
+jinja2>=3.1
+python-multipart>=0.0.9      # 管理后台文件上传
+numpy>=1.26
+
+# ---- 检索（强烈建议）----
+faiss-cpu>=1.8               # 向量库；缺失时自动降级为 NumPy 兜底
+jieba>=0.42                  # 中文分词（BM25 效果）；缺失时退化为字符 bigram
+
+# ---- 文档解析 / 模型调用（可选）----
+pypdf>=4.2                   # PDF 文本提取（扫描件不支持）
+openai>=1.40                 # LLM 调用（OpenAI 兼容协议）；LLM_PROVIDER=mock 时可不用
+
+# ---- 测试 ----
+pytest>=8.0

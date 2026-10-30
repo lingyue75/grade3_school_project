@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>{% block title %}管理后台{% endblock %} · {{ app_name }}</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">{{ app_name }}<div class="muted" style="color:#9ca3af">管理后台</div></div>
+    <a href="/admin" class="{% if request.url.path == '/admin' %}active{% endif %}">概览</a>
+    <a href="/admin/knowledge" class="{% if request.url.path.startswith('/admin/knowledge') %}active{% endif %}">制度知识库</a>
+    <a href="/admin/prompts" class="{% if request.url.path.startswith('/admin/prompts') %}active{% endif %}">提示词模板</a>
+    <a href="/admin/audit" class="{% if request.url.path.startswith('/admin/audit') %}active{% endif %}">对话审计</a>
+    <a href="/chat">员工问答</a>
+    <div class="foot">
+      {{ user.name }}（{{ user.role }}）<br>
+      <a href="/logout" style="color:#9ca3af;padding:0">退出登录</a>
+    </div>
+  </aside>
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script>
+/* CSRF token：由中间件写入 Cookie，表单提交时一并带上（双提交校验） */
+const CSRF = "{{ csrf }}";
+async function api(path, options = {}) {
+  const opt = Object.assign({ headers: {} }, options);
+  opt.headers = Object.assign({ 'Content-Type': 'application/json' }, opt.headers);
+  if (opt.body && typeof opt.body === 'string') opt.body = opt.body;
+  const r = await fetch(path, opt);
+  return await r.json();
+}
+/* 带 CSRF 的表单提交（JSON 体里放 csrf 字段，后端从 form 解析） */
+async function apiForm(path, obj) {
+  const fd = new URLSearchParams();
+  Object.keys(obj || {}).forEach((k) => fd.append(k, obj[k]));
+  fd.append('csrf', CSRF);
+  const r = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: fd,
+  });
+  return await r.json();
+}
+function toast(msg, ok = true) {
+  const d = document.createElement('div');
+  d.className = 'alert ' + (ok ? 'alert-ok' : 'alert-error');
+  d.textContent = msg;
+  const main = document.querySelector('.main');
+  main.insertBefore(d, main.firstChild);
+  setTimeout(() => d.remove(), 4000);
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

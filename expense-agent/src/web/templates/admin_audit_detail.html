@@ -1,0 +1,88 @@
+{% extends "admin_base.html" %}
+{% block title %}会话详情{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>会话详情</h2>
+  <a class="btn btn-sm" href="/admin/audit">返回列表</a>
+</div>
+
+<div class="card">
+  <div class="row-between">
+    <div>
+      <b>{{ owner.name }}（{{ owner.employee_no }}）</b>
+      <span class="muted" style="margin-left:8px">会话 {{ session.id }} · 开始于 {{ session.created_at }}</span>
+    </div>
+  </div>
+</div>
+
+{% for m in items %}
+<div class="card">
+  <div class="row-between">
+    <div>
+      <span class="tag tag-{% if m.role == 'user' %}info{% else %}ok{% endif %}">
+        {{ '员工' if m.role == 'user' else '助手' }}</span>
+      <span class="muted" style="margin-left:8px">#{{ m.seq }} · {{ m.created_at }}</span>
+      {% if m.finish_reason and m.finish_reason != 'stop' %}
+      <span class="tag tag-warn">{{ m.finish_reason }}</span>{% endif %}
+    </div>
+    <div>
+      {% if m.role == 'assistant' %}
+      <button class="btn btn-sm btn-danger" onclick="flag('{{ m.id }}')">标记疑似违规</button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div style="margin-top:8px;white-space:pre-wrap">{{ m.content }}</div>
+
+  {% if m.retrieval_refs %}
+  <div class="sources" style="display:block">
+    <div class="st">引用来源（{{ m.retrieval_refs|length }} 条）</div>
+    {% for s in m.retrieval_refs %}
+    <div class="src-item">
+      <div><span class="no">[{{ s.no }}]</span>{{ s.file }}
+        {% if s.clause_no %}<span class="path">条款 {{ s.clause_no }}</span>{% endif %}</div>
+      <div class="snippet">{{ s.snippet }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if m.flags %}
+  <div style="margin-top:8px">
+    {% for f in m.flags %}
+    <div class="alert {% if f.resolved %}alert-ok{% else %}alert-error{% endif %}">
+      标记：{{ f.rule_name or f.note }}（{{ '自动' if f.source == 'auto' else '人工' }}）
+      · {{ f.created_at }}
+      {% if f.resolved %}· 复核结论：{{ f.resolution }}{% endif %}
+      {% if not f.resolved %}
+      <div style="margin-top:6px">
+        <button class="btn btn-sm" onclick="resolve('{{ m.id }}','confirmed_violation')">确认违规</button>
+        <button class="btn btn-sm" onclick="resolve('{{ m.id }}','false_positive')">误报</button>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<div class="card"><div class="empty">该会话没有消息</div></div>
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function flag(mid) {
+  const note = prompt('请填写标记说明（必填）：');
+  if (!note) return;
+  const j = await apiForm('/api/v1/admin/audit/messages/' + mid + '/flag', { note: note });
+  if (j.code === 0) { toast('已标记'); setTimeout(() => location.reload(), 500); }
+  else toast('标记失败：' + j.message, false);
+}
+async function resolve(mid, res) {
+  const j = await apiForm('/api/v1/admin/audit/messages/' + mid + '/flag', { resolve: res });
+  if (j.code === 0) { toast('已写入复核结论'); setTimeout(() => location.reload(), 500); }
+  else toast('操作失败：' + j.message, false);
+}
+</script>
+{% endblock %}

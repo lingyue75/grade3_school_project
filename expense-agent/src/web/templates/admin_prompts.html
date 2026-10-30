@@ -1,0 +1,62 @@
+{% extends "admin_base.html" %}
+{% block title %}提示词模板{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>提示词模板</h2>
+  <a class="btn btn-primary btn-sm" href="/admin/prompts/new">新建模板</a>
+</div>
+
+<div class="card">
+  <h3>当前生效</h3>
+  <div class="row-between">
+    <div>
+      <span class="tag tag-ok">v{{ active.version_no }} 生效中</span>
+      <span style="margin-left:8px">{{ active.name }}</span>
+    </div>
+    <a class="btn btn-sm" href="/admin/prompts/{{ active.id }}">查看 / 修改</a>
+  </div>
+  <div style="margin-top:8px;padding:10px;background:#f8fafc;border-radius:6px;white-space:pre-wrap;font-size:13px">
+    {{ active.content }}</div>
+</div>
+
+<div class="card">
+  <h3>全部版本</h3>
+  <table>
+    <tr><th>版本</th><th>名称</th><th>状态</th><th>创建人</th><th>发布时间</th><th>操作</th></tr>
+    {% for t in items %}
+    <tr>
+      <td>v{{ t.version_no }}</td>
+      <td><a href="/admin/prompts/{{ t.id }}">{{ t.name }}</a></td>
+      <td>
+        {% if t.is_active %}<span class="tag tag-ok">生效中</span>
+        {% elif t.status == 'draft' %}<span class="tag tag-warn">草稿</span>
+        {% elif t.status == 'archived' %}<span class="tag">已归档</span>
+        {% else %}<span class="tag tag-info">已发布</span>{% endif %}
+      </td>
+      <td>{{ t.creator or '系统' }}</td>
+      <td>{{ t.published_at or '-' }}</td>
+      <td>
+        <a class="btn btn-sm" href="/admin/prompts/{{ t.id }}">编辑</a>
+        {% if not t.is_active and t.status != 'archived' %}
+        <button class="btn btn-sm" onclick="activate('{{ t.id }}')">设为生效</button>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  <div class="muted" style="margin-top:8px">
+    ★ 已发布版本不可修改（保证历史问答可回放）；要改请新建版本后发布，或把历史版本设为生效实现回滚。
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function activate(id) {
+  if (!confirm('将该版本设为生效？当前生效版本会被替换。')) return;
+  const j = await apiForm('/api/v1/admin/prompts/' + id + '/activate', {});
+  if (j.code === 0) { toast('已切换生效版本'); setTimeout(() => location.reload(), 600); }
+  else toast('操作失败：' + j.message, false);
+}
+</script>
+{% endblock %}

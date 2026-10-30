@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>登录 · {{ app_name }}</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="login-wrap">
+  <h1>{{ app_name }}</h1>
+  <div class="sub">企业报销助手 · 员工问答与管理系统</div>
+
+  {% if err %}<div class="alert alert-error">{{ err }}</div>{% endif %}
+
+  <form method="post" action="/login">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input type="hidden" name="next" value="{{ next }}">
+    <div style="margin-bottom:12px">
+      <label>工号</label>
+      <input name="employee_no" placeholder="admin / 1001" autofocus>
+    </div>
+    <div style="margin-bottom:16px">
+      <label>密码</label>
+      <input type="password" name="password" placeholder="admin123 / 123456">
+    </div>
+    <button class="btn btn-primary" style="width:100%" type="submit">登 录</button>
+  </form>
+
+  <div class="muted" style="margin-top:16px;line-height:1.8">
+    演示账号：<br>
+    · 管理员：admin / admin123<br>
+    · 员工：1001 / 123456
+  </div>
+</div>
+</body>
+</html>

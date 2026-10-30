@@ -1,0 +1,100 @@
+{% extends "admin_base.html" %}
+{% block title %}制度知识库{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>制度知识库</h2>
+  <div>
+    <button class="btn btn-sm" id="btn-reindex">重建向量索引</button>
+  </div>
+</div>
+
+<div class="card">
+  <h3>上传制度文档</h3>
+  <div class="toolbar">
+    <div style="flex:1"><input type="file" id="file" accept=".md,.markdown,.pdf"></div>
+    <button class="btn btn-primary" id="btn-upload">上传并开始处理</button>
+  </div>
+  <div class="muted">支持 Markdown 与 PDF（PDF 需含可复制文本层，扫描件不支持）。
+    上传后自动：解析 → 按条款切片 → 向量化入库。</div>
+  <div id="progress" style="display:none;margin-top:10px" class="alert alert-info"></div>
+</div>
+
+<div class="card">
+  <h3>文档列表</h3>
+  {% if docs %}
+  <table>
+    <tr><th>文件名</th><th>类型</th><th>状态</th><th>分片数</th><th>上传人</th><th>时间</th><th>操作</th></tr>
+    {% for d in docs %}
+    <tr>
+      <td><a href="/admin/knowledge/{{ d.id }}">{{ d.title }}</a>
+        {% if d.error_text %}<div class="muted" style="color:#b91c1c">{{ d.error_text }}</div>{% endif %}</td>
+      <td>{{ d.source_type }}</td>
+      <td>
+        {% if d.status == 'ready' %}<span class="tag tag-ok">就绪</span>
+        {% elif d.status == 'failed' %}<span class="tag tag-danger">失败</span>
+        {% elif d.status == 'deleted' %}<span class="tag">已删除</span>
+        {% else %}<span class="tag tag-warn">{{ d.status }}</span>{% endif %}
+      </td>
+      <td>{{ d.chunk_count }}</td>
+      <td>{{ d.uploader or '系统' }}</td>
+      <td>{{ d.created_at }}</td>
+      <td>
+        <a class="btn btn-sm" href="/admin/knowledge/{{ d.id }}">分片预览</a>
+        <button class="btn btn-sm btn-danger" onclick="del('{{ d.id }}')">删除</button>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="empty">还没有制度文档，请先上传</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* 上传：走 /api/v1/admin/knowledge/upload（multipart），随后轮询摄取任务进度 */
+document.getElementById('btn-upload').onclick = async () => {
+  const f = document.getElementById('file').files[0];
+  if (!f) { toast('请先选择文件', false); return; }
+  const fd = new FormData();
+  fd.append('file', f);
+  fd.append('csrf', CSRF);
+  const r = await fetch('/api/v1/admin/knowledge/upload', { method: 'POST', body: fd });
+  const j = await r.json();
+  if (j.code !== 0) { toast('上传失败：' + j.message, false); return; }
+  toast('已接收，正在解析切片…');
+  poll(j.data.task_id);
+};
+
+/* 轮询任务状态：parsing / chunking / embedding / ready / failed */
+async function poll(taskId) {
+  const box = document.getElementById('progress');
+  box.style.display = 'block';
+  for (let i = 0; i < 40; i++) {
+    const r = await fetch('/api/v1/admin/tasks/' + taskId);
+    const j = await r.json();
+    if (j.code !== 0) break;
+    const t = j.data;
+    box.textContent = `处理中：${t.stage}　${t.progress}%`;
+    if (t.stage === 'ready') { toast('处理完成，共入库 ' + '文档就绪'); location.reload(); return; }
+    if (t.stage === 'failed') { box.className = 'alert alert-error'; box.textContent = '处理失败：' + t.error_text; return; }
+    await new Promise(s => setTimeout(s, 800));
+  }
+}
+
+/* 删除：软删（数据库标记 + 检索层过滤），向量索引留待重建 */
+async function del(id) {
+  if (!confirm('确定删除该文档？删除后其条文将不再参与检索。')) return;
+  const j = await apiForm('/api/v1/admin/knowledge/' + id + '/delete', {});
+  if (j.code === 0) { toast(j.data.message); setTimeout(() => location.reload(), 800); }
+  else toast('删除失败：' + j.message, false);
+}
+
+document.getElementById('btn-reindex').onclick = async () => {
+  if (!confirm('重建向量索引会重新向量化所有条文，可能需要一点时间，确定继续？')) return;
+  const j = await apiForm('/api/v1/admin/knowledge/reindex', {});
+  if (j.code === 0) toast(j.data.message); else toast('重建失败：' + j.message, false);
+};
+</script>
+{% endblock %}

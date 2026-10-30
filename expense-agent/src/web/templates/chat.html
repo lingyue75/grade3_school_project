@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>问答 · {{ app_name }}</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="chat-wrap">
+  <div class="chat-head">
+    <div class="title">{{ app_name }} · 员工问答</div>
+    <div>
+      {% if 'knowledge:read' in perms %}<a class="btn btn-sm" href="/admin">管理后台</a>{% endif %}
+      <span class="muted" style="margin:0 6px">{{ user.name }}（{{ user.employee_no }}）</span>
+      <a class="btn btn-sm" href="/logout">退出</a>
+    </div>
+  </div>
+
+  <div class="chat-head" style="border-bottom:1px solid var(--line)">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-sm btn-primary" id="btn-new">新建会话</button>
+      {% for s in sessions %}
+        <a class="btn btn-sm" href="/chat?session={{ s.id }}"
+           style="{% if request.query_params.get('session') == s.id %}border-color:var(--brand);color:var(--brand){% endif %}">{{ s.title }}</a>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if err %}<div style="padding:0 18px"><div class="alert alert-error">{{ err }}</div></div>{% endif %}
+
+  <div class="chat-body" id="body"></div>
+
+  <div class="chat-foot">
+    <textarea id="q" placeholder="例如：P3 职级去北京出差，住宿费每晚能报多少？（Enter 发送，Shift+Enter 换行）"></textarea>
+    <button class="btn btn-primary" id="btn-send" style="height:56px">发送</button>
+    <button class="btn" id="btn-stop" style="height:56px;display:none">停止</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   员工问答前端（原生 JS）
+   协议：POST /api/v1/chat → SSE。EventSource 不支持 POST，故用 fetch + ReadableStream 手动解析。
+   事件：meta / status / sources / delta / done / error
+   ============================================================================ */
+const $ = (id) => document.getElementById(id);
+const body = $('body');
+let sessionId = "{{ request.query_params.get('session') or '' }}";
+let controller = null;
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;   // 一律 textContent：防 XSS
+  return e;
+}
+
+// ---------- 渲染一条消息 ----------
+function addMessage(role) {
+  const wrap = el('div', 'msg ' + (role === 'user' ? 'user' : 'assistant'));
+  const avatar = el('div', 'avatar', role === 'user' ? '我' : '助手');
+  const bubble = el('div', 'bubble');
+  const who = el('div', 'who', role === 'user' ? '我' : '报销助手');
+  const text = el('div', 'text');
+  const sources = el('div', 'sources');
+  sources.style.display = 'none';
+  bubble.append(who, text, sources);
+  wrap.append(avatar, bubble);
+  body.append(wrap);
+  body.scrollTop = body.scrollHeight;
+  return { text, sources, wrap };
+}
+
+// ---------- 渲染引用来源（回答底部） ----------
+function renderSources(container, sources) {
+  if (!sources || !sources.length) { container.style.display = 'none'; return; }
+  container.innerHTML = '';
+  container.style.display = 'block';
+  const title = el('div', 'st', '引用来源（' + sources.length + ' 条）');
+  container.append(title);
+  let weak = false;
+  sources.forEach((s) => {
+    if (s.low_confidence) weak = true;
+    const item = el('div', 'src-item');
+    const head = el('div');
+    const no = el('span', 'no', '[' + s.no + ']');
+    head.append(no, document.createTextNode(s.file || '制度文件'));
+    if (s.clause_no) head.append(el('span', 'path', '  条款 ' + s.clause_no));
+    if (s.heading_path) head.append(el('span', 'path', '  · ' + s.heading_path));
+    const sn = el('div', 'snippet', s.snippet || '');
+    item.append(head, sn);
+    container.append(item);
+  });
+  if (weak) {
+    const w = el('div', 'risk-banner', '依据较弱：以下条文与问题的匹配度偏低，建议咨询财务部门确认。');
+    container.append(w);
+  }
+}
+
+// ---------- 状态行 ----------
+let statusEl = null;
+function setStatus(text) {
+  if (!statusEl) {
+    statusEl = el('div', 'status-line');
+    body.append(statusEl);
+  }
+  statusEl.innerHTML = '';
+  statusEl.append(el('span', 'dot'), el('span', '', text));
+  body.scrollTop = body.scrollHeight;
+}
+function clearStatus() { if (statusEl) { statusEl.remove(); statusEl = null; } }
+
+// ---------- SSE 解析 ----------
+function handleEvent(raw) {
+  if (raw.startsWith(':')) return;                 // 心跳注释
+  let event = 'message', data = '';
+  raw.split('\n').forEach((line) => {
+    if (line.startsWith('event:')) event = line.slice(6).trim();
+    else if (line.startsWith('data:')) data += line.slice(5).trim();
+  });
+  if (data === '[DONE]') return { event: '__done__' };
+  try { return { event, data: JSON.parse(data) }; } catch (e) { return { event, data: {} }; }
+}
+
+async function send() {
+  const question = $('q').value.trim();
+  if (!question) return;
+  $('q').value = '';
+  $('btn-send').disabled = true;
+  $('btn-stop').style.display = 'inline-block';
+
+  addMessage('user').text.textContent = question;
+  const ans = addMessage('assistant');
+  setStatus('正在检索制度…');
+
+  controller = new AbortController();
+  try {
+    const res = await fetch('/api/v1/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId || null, question, stream: true }),
+      signal: controller.signal,
+    });
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const parts = buf.split('\n\n');
+      buf = parts.pop();
+      for (const p of parts) {
+        const { event, data } = handleEvent(p);
+        if (event === 'meta') {
+          sessionId = data.session_id || sessionId;
+        } else if (event === 'status') {
+          setStatus(data.text || '处理中…');
+        } else if (event === 'sources') {
+          renderSources(ans.sources, data.sources);
+        } else if (event === 'delta') {
+          clearStatus();
+          ans.text.textContent += data.content || '';
+          body.scrollTop = body.scrollHeight;
+        } else if (event === 'done') {
+          if (data.risk_hit) {
+            ans.wrap.append(el('div', 'risk-banner', '该问答已命中风险规则，已提交管理员复核。'));
+          }
+        } else if (event === 'error') {
+          clearStatus();
+          ans.text.textContent = '【错误 ' + data.code + '】' + (data.message || '服务异常');
+        }
+      }
+    }
+  } catch (e) {
+    clearStatus();
+    if (e.name !== 'AbortError') ans.text.textContent = '【网络异常】' + e.message;
+    else ans.text.textContent += '（已停止生成）';
+  } finally {
+    clearStatus();
+    $('btn-send').disabled = false;
+    $('btn-stop').style.display = 'none';
+    body.scrollTop = body.scrollHeight;
+  }
+}
+
+// ---------- 交互绑定 ----------
+$('btn-send').onclick = send;
+$('btn-stop').onclick = () => controller && controller.abort();
+$('q').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+$('btn-new').onclick = async () => {
+  const r = await fetch('/api/v1/sessions', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: '新会话' }),
+  });
+  const j = await r.json();
+  location.href = '/chat?session=' + j.data.session_id;
+};
+
+// ---------- 进入页面时恢复历史消息 ----------
+(async function restore() {
+  if (!sessionId) return;
+  const r = await fetch('/api/v1/sessions/' + sessionId + '/messages');
+  const j = await r.json();
+  if (j.code !== 0) return;
+  j.data.items.forEach((m) => {
+    if (m.role === 'system' || m.role === 'tool') return;
+    const node = addMessage(m.role);
+    node.text.textContent = m.content || '';
+    if (m.retrieval_refs && m.retrieval_refs.length) renderSources(node.sources, m.retrieval_refs);
+  });
+})();
+</script>
+</body>
+</html>

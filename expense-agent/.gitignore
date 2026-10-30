@@ -1,0 +1,26 @@
+# 运行时数据（含数据库、向量索引、上传文件）
+data/
+*.db
+*.db-wal
+*.db-shm
+.rag_index/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# 环境变量与密钥
+.env
+.env.local
+
+# 评测结果（人工判定前属中间产物，可选提交）
+# eval/results.*
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+.pytest_cache/

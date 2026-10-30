@@ -1,0 +1,95 @@
+/* 报销助手 · 统一样式（自研轻量 SaaS 风格，不依赖外网 CDN） */
+:root{
+  --bg:#f5f7fa; --panel:#ffffff; --line:#e3e8ef; --text:#1f2937; --muted:#6b7280;
+  --brand:#2563eb; --brand-dark:#1d4ed8; --ok:#16a34a; --warn:#d97706; --danger:#dc2626;
+  --radius:8px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:"Microsoft YaHei","PingFang SC","Helvetica Neue",Arial,sans-serif;font-size:14px;line-height:1.6}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- 通用组件 ---------- */
+.btn{display:inline-block;padding:6px 14px;border:1px solid var(--line);background:#fff;color:var(--text);
+  border-radius:var(--radius);cursor:pointer;font-size:13px}
+.btn:hover{border-color:var(--brand);color:var(--brand)}
+.btn-primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn-primary:hover{background:var(--brand-dark);color:#fff}
+.btn-danger{color:var(--danger);border-color:#fca5a5}
+.btn-danger:hover{background:#fee2e2}
+.btn-sm{padding:3px 9px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+input,textarea,select{padding:7px 10px;border:1px solid var(--line);border-radius:var(--radius);
+  font-size:13px;width:100%;font-family:inherit;background:#fff}
+input:focus,textarea:focus{outline:none;border-color:var(--brand)}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.card h3{margin:0 0 10px;font-size:15px}
+.muted{color:var(--muted);font-size:12px}
+.tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;background:#eef2f7;color:var(--muted)}
+.tag-ok{background:#dcfce7;color:#15803d}
+.tag-warn{background:#fef3c7;color:#b45309}
+.tag-danger{background:#fee2e2;color:#b91c1c}
+.tag-info{background:#dbeafe;color:#1d4ed8}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#f8fafc;color:var(--muted);font-weight:600}
+tr:hover td{background:#fafbfc}
+.alert{padding:8px 12px;border-radius:var(--radius);font-size:13px;margin-bottom:12px}
+.alert-error{background:#fee2e2;color:#b91c1c}
+.alert-info{background:#dbeafe;color:#1d4ed8}
+.alert-ok{background:#dcfce7;color:#15803d}
+.empty{padding:28px;text-align:center;color:var(--muted);font-size:13px}
+
+/* ---------- 登录 ---------- */
+.login-wrap{max-width:360px;margin:9vh auto;background:var(--panel);padding:28px;
+  border:1px solid var(--line);border-radius:12px}
+.login-wrap h1{font-size:20px;margin:0 0 4px}
+.login-wrap .sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+
+/* ---------- 后台布局 ---------- */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:200px;background:#111827;color:#d1d5db;padding:16px 0;flex-shrink:0}
+.sidebar .brand{padding:0 18px 16px;font-size:16px;color:#fff;font-weight:600;border-bottom:1px solid #1f2937}
+.sidebar a{display:block;padding:9px 18px;color:#d1d5db;font-size:14px}
+.sidebar a:hover,.sidebar a.active{background:#1f2937;color:#fff;text-decoration:none}
+.sidebar .foot{padding:14px 18px;font-size:12px;color:#6b7280;border-top:1px solid #1f2937;margin-top:12px}
+.main{flex:1;padding:20px 24px;overflow:auto}
+.page-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.page-head h2{margin:0;font-size:19px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.stat .num{font-size:24px;font-weight:600;color:var(--brand)}
+.stat .label{font-size:12px;color:var(--muted)}
+.toolbar{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
+.toolbar .field{width:150px}
+.row-between{display:flex;justify-content:space-between;align-items:center}
+
+/* ---------- 聊天页 ---------- */
+.chat-wrap{max-width:860px;margin:0 auto;height:100vh;display:flex;flex-direction:column;background:var(--panel)}
+.chat-head{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;
+  justify-content:space-between;align-items:center}
+.chat-head .title{font-size:16px;font-weight:600}
+.chat-body{flex:1;overflow:auto;padding:18px}
+.msg{margin-bottom:16px;display:flex;gap:10px}
+.msg .avatar{width:30px;height:30px;border-radius:50%;background:#e5e7eb;color:#374151;
+  display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.msg.user .avatar{background:var(--brand);color:#fff}
+.msg .bubble{flex:1;min-width:0}
+.msg .who{font-size:12px;color:var(--muted);margin-bottom:3px}
+.msg .text{white-space:pre-wrap;word-break:break-word}
+.sources{margin-top:8px;border-top:1px dashed var(--line);padding-top:8px}
+.sources .st{font-size:12px;color:var(--muted);margin-bottom:5px}
+.src-item{border:1px solid var(--line);border-radius:6px;padding:7px 9px;margin-bottom:5px;font-size:12px;background:#fafbfc}
+.src-item .no{display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;
+  background:#eef2f7;border-radius:3px;margin-right:6px;color:var(--muted)}
+.src-item .path{color:var(--muted)}
+.src-item .snippet{margin-top:4px;color:#374151}
+.status-line{color:var(--muted);font-size:13px;padding:6px 0;display:flex;align-items:center;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--brand);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.chat-foot{border-top:1px solid var(--line);padding:12px 18px;display:flex;gap:10px;align-items:flex-end}
+.chat-foot textarea{height:56px;resize:none}
+.risk-banner{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:6px 10px;
+  border-radius:6px;font-size:12px;margin-top:6px}

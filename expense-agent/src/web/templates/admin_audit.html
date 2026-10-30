@@ -1,0 +1,78 @@
+{% extends "admin_base.html" %}
+{% block title %}对话审计{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>对话审计</h2>
+  <a class="btn btn-sm" href="/api/v1/admin/audit/export">导出 CSV</a>
+</div>
+
+<div class="card">
+  <h3>筛选</h3>
+  <form method="get" action="/admin/audit" class="toolbar">
+    <div class="field"><label>工号</label><input name="employee_no" value="{{ filters.employee_no }}"></div>
+    <div class="field"><label>关键词</label><input name="keyword" value="{{ filters.keyword }}"></div>
+    <div class="field"><label>起始日期</label><input name="date_from" placeholder="2026-10-01" value="{{ filters.date_from }}"></div>
+    <div class="field"><label>结束日期</label><input name="date_to" placeholder="2026-10-30" value="{{ filters.date_to }}"></div>
+    <div class="field"><label>&nbsp;</label>
+      <label style="display:flex;gap:6px;align-items:center">
+        <input type="checkbox" name="risk_only" value="1" style="width:auto"
+               {% if filters.risk_only %}checked{% endif %}> 仅看疑似违规
+      </label>
+    </div>
+    <button class="btn btn-primary" type="submit">查询</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>员工提问记录</h3>
+  {% if rows %}
+  <table>
+    <tr><th>时间</th><th>员工</th><th>问题</th><th>标记</th><th>操作</th></tr>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.created_at }}</td>
+      <td>{{ r.user_name }}<div class="muted">{{ r.employee_no }}</div></td>
+      <td>{{ r.content[:80] }}{% if r.content|length > 80 %}…{% endif %}</td>
+      <td>
+        {% if r.flag_count %}<span class="tag tag-danger">疑似违规 {{ r.flag_count }}</span>
+        {% else %}<span class="muted">-</span>{% endif %}
+      </td>
+      <td><a class="btn btn-sm" href="/admin/audit/{{ r.session_id }}">查看详情</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="empty">没有符合条件的记录</div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h3>风险规则（自动标记）</h3>
+  <div class="muted" style="margin-bottom:8px">
+    ★ 系统只做"疑似"标记，不做违规判定；结论由管理员复核后写入。
+  </div>
+  <table>
+    <tr><th>规则</th><th>命中词 / 正则</th><th>级别</th><th>状态</th><th>操作</th></tr>
+    {% for r in rules %}
+    <tr>
+      <td>{{ r.name }}<div class="muted">{{ r.description }}</div></td>
+      <td class="muted">{{ r.pattern }}</td>
+      <td>{{ r.level }}</td>
+      <td>{% if r.enabled %}<span class="tag tag-ok">启用</span>{% else %}<span class="tag">停用</span>{% endif %}</td>
+      <td><button class="btn btn-sm" onclick="toggle('{{ r.id }}', {{ 0 if r.enabled else 1 }})">
+        {{ '停用' if r.enabled else '启用' }}</button></td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function toggle(id, enabled) {
+  const j = await apiForm('/api/v1/admin/audit/risk-rules/' + id, { enabled: String(enabled) });
+  if (j.code === 0) { toast('已更新'); setTimeout(() => location.reload(), 500); }
+  else toast('操作失败：' + j.message, false);
+}
+</script>
+{% endblock %}
