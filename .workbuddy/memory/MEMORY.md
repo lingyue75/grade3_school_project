@@ -13,6 +13,11 @@
 ## 交付包结构
 `venue-schedule-tool/`（按 GitHub `my-tool/` 框架）：src 主目录 + docs（4 份客户交付物 + 2 张流程图）+ tests + examples + scripts + config + data + .github。
 
+## ★ 主项目 vs 样例（重要，别搞混）
+- **主项目 = `venue-schedule-tool/`（场馆排期与需求变更）**，所有正式工作围绕它。
+- **`sample/expense-agent/`（报销助手）= 演练样例**：用同一套 10 步流水线（需求评审→架构→原型→接口→后台→Agent 设计→Agent 编排→评测→上线检查→结构推送）跑通的示范项目，已推送 GitHub，仅供流程参考，**不要再往里加新功能**。
+- 现状：场馆项目已完成核心冲突检测（CLI + 30 样本回放 + pytest）与业务文档；**缺 Web/接口、管理后台、Agent、评测集、上线检查清单**。
+
 ## 工具链经验
 - Word：走 `workbuddy-office-routing` → `workbuddy-docx`（S1 创作 → S2 美化 → S3 转换，present_files 成品预览）。
 - Excel 新表：`workbuddy-sheet-generation`（openpyxl 直写；含公式时必须 recalc 成功，随后 aigc_label 打标）。
