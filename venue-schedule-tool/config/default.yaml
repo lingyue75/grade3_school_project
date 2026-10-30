@@ -16,3 +16,21 @@ handover_required_items:
 review:
   require_source: true              # 无来源提示不得进入正式流转
   authorized_reviewers: []          # 授权人员清单由审核与质量负责人维护，默认收紧为空
+
+# Agent 编排（只提示、不锁档）
+agent:
+  max_steps: 5                      # 自主决策轮次上限
+  max_post_confirm_steps: 3         # 授权人确认后的追加轮次
+  stamp_ttl_seconds: 300            # 校验令牌有效期
+  auto_lock: false                  # 恒为 false（f05/f52）
+  require_evidence: true            # 无来源不得进入正式流转（f40）
+  authorized_reviewers:             # 授权人员（f41）
+    - 傅景
+    - 顾明岚
+  forbidden_tools:                  # 永不提供的能力（安全边界）
+    - lock_slot
+    - confirm_booking
+    - sign_contract
+    - commit_capacity
+    - override_conflict
+    - delete_slot

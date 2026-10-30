@@ -35,9 +35,27 @@ python examples/demo.py
 # 命令行回放，输出 JSON 报告
 PYTHONPATH=src python -m venue_schedule_tool.main --out report.json
 
+# Agent 三条典型轨迹（离线可跑，含防跳步与锁档拦截验证）
+python examples/agent_demo.py
+
 # 测试
 pytest tests/ -v
 ```
+
+## Agent 编排（`src/venue_schedule_tool/agent/`）
+
+在核心冲突检测之上叠加自主决策能力，**复用** `core/conflict.py` 而不重写：
+
+| 模块 | 职责 |
+|---|---|
+| `tools.py` | 10 个工具 + 校验令牌 stamp + 工具动态可见性 + 禁用能力清单 |
+| `planner.py` | 决策器：规则策略（离线）/ 真实 LLM Function Calling |
+| `loop.py` | 执行循环：自主 5 轮 + **变更请求须授权人确认（中断/恢复）** |
+| `store.py` | SQLite 持久化：运行实例 / 决策日志 / 变更请求 |
+
+红线落地方式：工具集里**根本不提供** `lock_slot`/`sign_contract`/`commit_capacity`；
+无来源（f40）不得发变更请求；`missing` 状态只报"数据不完整"（f31）；
+正式结论只能由授权人员（傅景/顾明岚）作出（f41）。详见 `docs/Agent设计-工具与约束.md`。
 
 ## 目录结构
 

@@ -23,3 +23,8 @@ Thumbs.db
 *.log
 *.tmp
 report.json
+
+# Agent 运行时数据库（SQLite，标准库生成）
+data/*.db
+data/*.db-wal
+data/*.db-shm
