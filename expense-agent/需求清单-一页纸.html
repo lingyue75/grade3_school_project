@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>报销助手智能体系统 · 需求清单（一页纸）</title>
+<style>
+  @page { size: A4 portrait; margin: 8mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #f2f4f7; color: #1f2328;
+    font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+    font-size: 8.2pt; line-height: 1.35;
+  }
+  .page {
+    width: 194mm; min-height: 281mm; margin: 6mm auto; padding: 6mm 6.5mm;
+    background: #fff; border: 1px solid #d8dde5; border-radius: 4px;
+  }
+  header { display: flex; align-items: baseline; justify-content: space-between;
+    border-bottom: 2px solid #1a4f8a; padding-bottom: 3px; margin-bottom: 4px; }
+  h1 { font-size: 13pt; margin: 0; color: #14375e; letter-spacing: .5px; }
+  .meta { font-size: 7.6pt; color: #6b7280; text-align: right; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 6mm; }
+  h2 { font-size: 9pt; margin: 4px 0 2px; color: #14375e;
+    border-left: 3px solid #1a4f8a; padding-left: 4px; background: #f5f8fc; }
+  p, ul { margin: 2px 0; }
+  ul { padding-left: 11px; }
+  li { margin: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 2px 0; }
+  th, td { border: 1px solid #c9d3e0; padding: 1.5px 3px; vertical-align: top; }
+  th { background: #eaf1f9; color: #14375e; font-weight: 600; text-align: left; }
+  td.k { background: #f7f9fc; width: 22%; font-weight: 600; }
+  .tag { display:inline-block; padding:0 3px; border-radius:2px; font-size:7pt; }
+  .t-a { background:#e6f4ea; color:#146b3a; }
+  .t-b { background:#fdf1e3; color:#8a4b00; }
+  .t-c { background:#fdeaea; color:#a01f1f; }
+  .flow { display:flex; align-items:center; gap:2px; margin:3px 0; flex-wrap:wrap; font-size:7.4pt; }
+  .step { background:#14375e; color:#fff; padding:1.5px 4px; border-radius:2px; }
+  .arr { color:#8a95a3; }
+  .warn { background:#fff8e6; border-left:3px solid #d98c00; padding:2px 4px; margin:2px 0; }
+  .red { background:#fdeaea; border-left:3px solid #c0392b; padding:2px 4px; margin:2px 0; }
+  footer { border-top:1px solid #d8dde5; margin-top:4px; padding-top:2px;
+    font-size:7pt; color:#8a95a3; display:flex; justify-content:space-between; }
+  @media print {
+    body { background:#fff; }
+    .page { width:auto; min-height:0; margin:0; padding:0; border:none; }
+    h2 { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>报销助手智能体系统 · 需求清单（一页纸）</h1>
+    <div class="meta">v1.0 ｜ 2026-10-30 ｜ 状态：待评审<br>依据「需求评审 10 问」答复生成</div>
+  </header>
+
+  <div class="cols">
+    <!-- 左栏 -->
+    <div>
+      <h2>1｜目标与范围</h2>
+      <p>为全体员工与管理员提供<b>全链路自研</b>的 Web 报销系统：票据自动归集 → 结构化解析 → 智能填单 → 合规硬拦截 → 预算自动占用 → 现有 OA 审批 → 支付与凭证。</p>
+      <ul>
+        <li><b>一期</b>：交付到「审批通过 + 生成付款申请单」（含预算占用与释放）。</li>
+        <li><b>二期</b>：支付执行、银企对接、会计凭证、月结关账。</li>
+        <li><b>默认假设</b>：单部门试点 3 个月；不做多法人/多币种/多语言。</li>
+      </ul>
+
+      <h2>2｜用户角色</h2>
+      <table>
+        <tr><th>角色</th><th>核心诉求 / 关键权限</th></tr>
+        <tr><td class="k">员工</td><td>少填表、少退单、进度可见；提交/撤回、查看本人票据池</td></tr>
+        <tr><td class="k">部门审批人</td><td>快速判断该不该批；审批、看本部门预算占用</td></tr>
+        <tr><td class="k">财务复核员</td><td>高风险兜底；复核队列、强制拦截释放、额度回滚</td></tr>
+        <tr><td class="k">系统管理员</td><td>制度变更不提开发需求；规则配置与发布、职级标准维护</td></tr>
+        <tr><td class="k">审计员</td><td>只读：证据链日志、规则版本快照</td></tr>
+      </table>
+
+      <h2>3｜关键决策快照（决定架构）</h2>
+      <table>
+        <tr><th style="width:12%">#</th><th style="width:36%">决策</th><th>架构后果</th></tr>
+        <tr><td class="k">Q1 采集</td><td>邮箱/卡包自动归集</td><td>需采集管道 + 跨来源去重；<b>不建</b>税务直连层</td></tr>
+        <tr><td class="k">Q2 票种</td><td>仅数电票 + 增值税票</td><td>单一解析器（XML/OFD/PDF），固定 Schema，<b>不上</b>多模态</td></tr>
+        <tr><td class="k">Q3 制度</td><td>配置化规则表 + 版本快照</td><td>规则引擎服务；规则版本绑定单据，可解释可复现</td></tr>
+        <tr><td class="k">Q4 管控</td><td>硬拦截 + 自动占预算</td><td>额度服务（冻结/核销/释放）+ 并发控制 + 对账补偿</td></tr>
+        <tr><td class="k">Q5 审批</td><td>复用现有 OA</td><td>不自研工作流；只做适配层 + 回调 + 状态同步</td></tr>
+        <tr><td class="k">Q6 标准</td><td>仅按职级</td><td>静态标准表 + 主数据同步，RBAC 足够</td></tr>
+        <tr><td class="k">Q7 边界</td><td>全新自研含支付凭证</td><td>工量最大，必须分期；需科目/期间/付款单模型</td></tr>
+        <tr><td class="k">Q8 部署</td><td>公有云 + 公有云大模型</td><td>数据分级、外发脱敏、模型商合同条款约束</td></tr>
+        <tr><td class="k">Q9 入口</td><td>Web 门户</td><td>前后端分离 B/S；IM 入口列 P2</td></tr>
+        <tr><td class="k">Q10 自动化</td><td>低风险自动放行 / 高风险转人工</td><td>风险分引擎 + 复核工作台 + 抽检回溯</td></tr>
+      </table>
+
+      <h2>4｜核心流程</h2>
+      <div class="flow">
+        <span class="step">1 归集</span><span class="arr">▸</span>
+        <span class="step">2 解析</span><span class="arr">▸</span>
+        <span class="step">3 填单</span><span class="arr">▸</span>
+        <span class="step">4 校验</span><span class="arr">▸</span>
+        <span class="step">5 占预算</span><span class="arr">▸</span>
+        <span class="step">6 同步 OA</span><span class="arr">▸</span>
+        <span class="step">7 复核/放行</span>
+      </div>
+      <ul>
+        <li><b>归集</b>：IMAP/卡包定时拉取 → 对象存储 → 票据池（四元组查重：号码+代码+金额+日期）。</li>
+        <li><b>解析</b>：数电票 XML/OFD 优先，降级 PDF 文本，最后 OCR；输出字段级置信度。</li>
+        <li><b>填单</b>：自动归集票据、匹配费用类型与职级标准，生成草稿（建议，不代提交）。</li>
+        <li><b>校验</b>：规则引擎同步执行，不通过即阻断并给出条款依据。</li>
+        <li><b>占预算</b>：冻结额度 → 推送 OA 单（携带占用号）。</li>
+        <li><b>同步</b>：OA 回调核销/释放；回调丢失由定时对账补偿。</li>
+        <li><b>复核</b>：高风险进人工队列，结果回流为评估样本。</li>
+      </ul>
+
+      <h2>5｜功能需求（Must / P0）</h2>
+      <ul>
+        <li><b>票据池</b>：归集、查重、状态机（未使用/已占用/已报销/已作废）、一票一单绑定。</li>
+        <li><b>解析服务</b>：结构化字段 + 字段级置信度。</li>
+        <li><b>规则引擎</b>：范围 + 条件表达式 + 动作（阻断/警告/放行），版本快照与变更审计。</li>
+        <li><b>额度服务</b>：按部门/科目/期间冻结、核销、释放，并发安全，对账报表。</li>
+        <li><b>单据服务</b>：草稿、提交、撤回、状态机、证据链。</li>
+        <li><b>OA 适配层</b>：发起、回调接收、幂等、补偿重试。</li>
+        <li><b>风险分引擎</b>：命中硬规则 = 高风险转人工；全绿 = 自动放行。</li>
+        <li><b>复核工作台</b>：队列、意见、强制释放、抽检。</li>
+        <li><b>审计日志</b>：谁、何时、用哪条规则版本、做了什么决定。</li>
+      </ul>
+      <p><b>Should（P1）</b>：制度问答 RAG（只答不裁）· 职级标准后台 · 数据看板 · 付款申请单生成（不执行付款）。</p>
+    </div>
+
+    <!-- 右栏 -->
+    <div>
+      <h2>6｜系统分层（逻辑架构）</h2>
+      <table>
+        <tr><td class="k">接入层</td><td>Web 门户（Vue3，响应式）；P2 加企微/钉钉入口</td></tr>
+        <tr><td class="k">采集层</td><td>邮箱/卡包采集 Job、手动上传、附件预处理</td></tr>
+        <tr><td class="k">票据池</td><td>Invoice Pool：去重、验真、状态机、占用绑定</td></tr>
+        <tr><td class="k">规则层</td><td>规则引擎服务（配置化规则表 + 表达式求值 + 版本）</td></tr>
+        <tr><td class="k">额度层</td><td>预算额度服务：冻结/核销/释放 + 分布式锁 + 对账</td></tr>
+        <tr><td class="k">单据编排</td><td>单据服务 + OA 适配层 + 回调监听 + 补偿任务</td></tr>
+        <tr><td class="k">智能体层</td><td>AI 网关 → 公有云大模型（填单建议、归因、制度问答）</td></tr>
+        <tr><td class="k">复核台</td><td>人工队列、抽检、回溯评估、样本回流</td></tr>
+        <tr><td class="k">基础服务</td><td>主数据（职级/组织）、RBAC、审计日志、对象存储、消息通知</td></tr>
+        <tr><td class="k">二期</td><td>付款单、银企支付、会计凭证、科目与期间管理</td></tr>
+      </table>
+      <div class="red"><b>红线</b>：硬规则先跑且优先级最高；LLM 只输出建议，<b>不得独立放行</b>；高风险一律转人工。</div>
+
+      <h2>7｜明确不做（Out of Scope）</h2>
+      <ul>
+        <li>不自研审批工作流引擎（复用 OA）。</li>
+        <li>不做供应商/采购/合同管理、差旅预订。</li>
+        <li>不做原生移动 App（响应式 Web 优先）。</li>
+        <li>一期不做银企支付、会计凭证、多币种多法人。</li>
+        <li>不做通用 DSL 规则语言（受限表达式即可）。</li>
+      </ul>
+
+      <h2>8｜非功能需求</h2>
+      <table>
+        <tr><th style="width:20%">类别</th><th>要求</th></tr>
+        <tr><td class="k">准确率</td><td>结构化字段抽取 ≥ 98%（数电票 XML 路径）；重复票拦截召回 100%、误报 ≤ 1%</td></tr>
+        <tr><td class="k">性能</td><td>单票据解析 ≤ 5s（P95）；提交校验 ≤ 2s；支持 100 并发</td></tr>
+        <tr><td class="k">安全</td><td>影像加密存储、最小权限；外发大模型前脱敏（人名/银行账号/身份证）</td></tr>
+        <tr><td class="k">合规</td><td>数据境内存储；模型商合同「不训练、不留存」；操作留痕 ≥ 3 年</td></tr>
+        <tr><td class="k">可用</td><td>核心链路 99.5%；OA 不可用时离线排队、恢复自动续传</td></tr>
+        <tr><td class="k">可审计</td><td>每个自动决策可回放：输入快照 + 规则版本 + 输出结论</td></tr>
+      </table>
+
+      <h2>9｜部署与技术选型</h2>
+      <ul>
+        <li><b>部署</b>：公有云境内单 Region，容器化（K8s）；RDS 主备 + Redis（缓存/锁）+ OSS 存影像。</li>
+        <li><b>模型</b>：公有云大模型，统一 AI 网关（限流、脱敏、审计、可切供应商）。</li>
+        <li><b>集成</b>：OA（发起/回调）、HR 或通讯录（职级主数据）、邮箱（IMAP，员工授权）。</li>
+        <li><b>技术栈</b>：Java Spring Boot（业务）+ Python FastAPI（AI 编排）+ Vue3 + MySQL/Redis/OSS；规则求值用 Aviator/QLExpress；编排用 LangGraph 或自研。</li>
+      </ul>
+
+      <h2>10｜验收指标（试点期末）</h2>
+      <table>
+        <tr><th style="width:52%">指标</th><th>目标</th></tr>
+        <tr><td>单据一次通过率</td><td>≥ 85%（基线待测）</td></tr>
+        <tr><td>自动放行率 / 事后差错</td><td>≥ 60% / 差错率 = 0</td></tr>
+        <tr><td>员工平均填单耗时</td><td>下降 ≥ 70%</td></tr>
+        <tr><td>重复票、问题票拦截</td><td>召回 100%，误报 ≤ 1%</td></tr>
+        <tr><td>额度与 OA 状态一致性</td><td>100%（每日对账告警）</td></tr>
+        <tr><td>财务复核工时</td><td>下降 ≥ 50%</td></tr>
+      </table>
+
+      <h2>11｜主要风险与对策</h2>
+      <table>
+        <tr><th style="width:44%">风险</th><th>对策</th></tr>
+        <tr><td><span class="tag t-c">最高</span> 额度占用与外部 OA 状态不一致（Q4+Q5 叠加）</td><td>占用号贯穿全链路；回调幂等 + 定时对账补偿 + 每日一致性告警</td></tr>
+        <tr><td><span class="tag t-b">高</span> 自研含支付凭证，工量失控（Q7）</td><td>严格分期：一期止于付款申请单，支付凭证二期立项</td></tr>
+        <tr><td><span class="tag t-b">高</span> 公有云处理发票影像的合规审查（Q8）</td><td>数据分级 + 脱敏网关 + 合同条款；预留私有化迁移路径</td></tr>
+        <tr><td><span class="tag t-b">高</span> LLM 误判导致错误放行（Q10）</td><td>红线：硬规则优先，LLM 仅建议，高风险转人工</td></tr>
+        <tr><td><span class="tag t-a">中</span> 邮箱归集的员工隐私授权</td><td>明示授权、最小权限、仅取报销附件、可随时断开</td></tr>
+        <tr><td><span class="tag t-a">中</span> 制度频繁变更，规则维护成本高</td><td>规则与代码解耦，版本快照绑定单据，业务方自助配置</td></tr>
+      </table>
+
+      <div class="warn"><b>待确认项</b>：① 现有 OA 品牌与回调能力；② 一期是否需要发票税务验真（当前按本地四元组查重实现）；③ 试点部门与基线数据；④ 公有云合规审批责任方。</div>
+    </div>
+  </div>
+
+  <footer>
+    <span>报销助手智能体系统 · 需求清单 v1.0</span>
+    <span>本页为评审用一页纸，详细设计另行输出</span>
+  </footer>
+</div>
+</body>
+</html>

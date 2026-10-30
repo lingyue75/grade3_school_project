@@ -1,0 +1,10 @@
+# 阶段1 裸问答原型依赖
+# 必装：numpy（向量计算），openai（LLM / Embedding 调用，OpenAI 兼容协议）
+numpy>=1.26
+openai>=1.40
+
+# 强烈建议：faiss-cpu（真实向量库；缺失时脚本自动降级 NumPy 兜底）
+faiss-cpu>=1.8
+
+# 强烈建议：jieba（中文分词，BM25 效果显著更好；缺失时退化为字符 bigram）
+jieba>=0.42
