@@ -2,6 +2,30 @@
 
 本项目的所有重要变更都记录在这里。格式参考 Keep a Changelog，版本遵循语义化版本。
 
+## [0.5.0] - 2026-11-06 · 测试方案、可视化过程文档与 MVP 上线
+
+### 新增
+- `scripts/run_scenario_tests.py`：五类场景（正常/边界/对抗/权限/故障）共 **29 条**量化用例，
+  真实调用 src/ 模块、逐条计时采集；一次执行 PASS 28 / KNOWN 1 / FAIL 0。
+- `docs/测试方案-五类场景.{md,docx}`：用例清单、量化指标定义、阈值、红线专项、
+  已知口径与缺陷登记（K-01 闭区间端点、K-02 进撤场时长未叠加、K-03 缺列未做 schema 校验、K-04 待补来源）。
+- `docs/test-results/{正常,边界,对抗,权限,故障}场景测试.docx`：每份含逐条过程表、
+  实测输出、耗时、判定与一张「四阶段链路 + 逐条耗时判定」过程图；另存同名 .md / .png
+  与结构化结果 `scenarios.json`、汇总 `测试执行汇总.md`。
+- `site/index.html` + `scripts/build_site.py`：静态 MVP 演示站点，浏览器内复现
+  core 三类冲突规则；**已上线** https://venue-schedule-mvp.app.workbuddy.host/?sharecode=4KSZQPBMRT
+- `docs/MVP上线部署地址.{md,docx}`：分享链接、功能清单、JS/Python 一致性对照、
+  边界声明、更新与下线方式、管理入口。
+
+### 验证
+- 前端 JS 与 Python `detect_all` 逐类比对：均 11 条（7/1/1/2），auto_lock 全 False、原因全非空。
+- `pytest tests/ -q` 23 passed；30 样本回放退出码 0（f02）。
+- 站点部署返回 `verified=true`。
+
+### 边界
+- 站点为静态演示，无后端/数据库/登录，不代表生产系统上线；
+  不含锁档、改期、提交、对外承诺能力（f05/f52）。
+
 ## [0.4.0] - 2026-11-06 · 今日完整流程 8 项交付
 
 ### 新增

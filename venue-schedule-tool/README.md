@@ -98,6 +98,25 @@ python scripts/generate_flowcharts.py   # 两张流程图
 python scripts/generate_quote.py        # 报价方案 md
 ```
 
+## 测试与上线
+
+| 项 | 文件 / 地址 |
+| --- | --- |
+| 五类场景测试方案 | `docs/测试方案-五类场景.{md,docx}`（29 条用例、量化阈值、通过判据） |
+| 可视化测试过程 | `docs/test-results/{正常,边界,对抗,权限,故障}场景测试.docx`（各含过程图） |
+| 结构化实测结果 | `docs/test-results/scenarios.json`；5 张场景 PNG |
+| 测试执行器 | `scripts/run_scenario_tests.py`（真实调用 src/，无 mock） |
+| **MVP 上线地址** | **https://venue-schedule-mvp.app.workbuddy.host/?sharecode=4KSZQPBMRT** |
+| 部署说明 | `docs/MVP上线部署地址.{md,docx}` |
+
+```bash
+python scripts/run_scenario_tests.py   # 重跑五类场景，重生成图与过程文档
+python scripts/build_site.py           # 重建 site/index.html（改数据或规则后）
+```
+
+站点为静态 MVP 演示：浏览器内复现 `core/conflict.py` 的三类规则，
+部署前已用 Node 与 Python 逐类比对（均 11 条、分布一致）。**不代表生产系统上线**。
+
 ## 目录结构
 
 ```
@@ -115,11 +134,14 @@ venue-schedule-tool/
 │   └── utils/         # 样例数据读写
 ├── docs/
 │   ├── project-brief/ # ★ 说明文件包：6 套 × 3 格式（json/md/csv）+ 索引
+│   ├── test-results/  # 5 份场景过程文档 + 5 张图 + scenarios.json
 │   └── ...            # 交付清单、典型事件访谈、需求定义、报价方案、
-│                      # 业务挖掘报告、行业分析、设计方案、报价单、流程图、Agent 设计
+│                      # 测试方案、MVP 上线部署地址、行业分析、设计方案、流程图
+├── site/index.html    # MVP 静态演示站点（已上线）
 ├── tests/             # pytest 测试
 ├── examples/          # 30 样本回放 demo、Agent 三条轨迹
-├── scripts/           # generate_briefs.py、构建 / 部署脚本
+├── scripts/           # generate_briefs / generate_quote / generate_flowcharts /
+│                      # run_scenario_tests / build_site、构建与部署脚本
 ├── config/            # 默认参数
 ├── data/              # 30 个档期样本 + 交接记录（合成演练数据）
 └── .github/           # CI、Issue/PR 模板
