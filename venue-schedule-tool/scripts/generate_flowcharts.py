@@ -66,7 +66,7 @@ def new_canvas(w, h, title, subtitle):
 # ---------------------------------------------------------------- 现状流程图
 def draw_current():
     fig, ax = new_canvas(12.5, 9.2, "图一 · 场馆档期申请现状流程（人工模式）",
-                         "依据：业务需求发现报告 f01/f10/f11/f20/f23/f30/f31/f50/f52 —— 问题集中在交接点")
+                         "依据：f01/f10/f11/f20/f23/f30/f31/f50/f52 ｜ 融入典型事件 EVT-DLG-20260912-01（装卸口重叠 60 分钟）")
 
     top = ax.get_ylim()[1]
     y1 = top - 1.9     # 客户提出
@@ -111,11 +111,22 @@ def draw_current():
     arrow(ax, (3.4, y6 - BOX_H / 2), (5.0, y7 + 0.3))
     arrow(ax, (8.2, y6 - BOX_H / 2), (6.8, y7 + 0.3))
 
-    # 侧注：口径冲突
-    box(ax, 12.0, y3, "销售希望延长\n客户使用时间\n↔ 运营保留\n恢复检查时间\n（f50 口径冲突）", C_PAIN, w=2.2, h=1.5, fs=9)
-    arrow(ax, (10.85, y3), (10.9, y3), color="#FFFFFF")  # 占位
+    # 侧注①：典型事件锚点（清单第 5 项要求改造前流程图融入典型事件问题）
+    # 数据来自 docs/典型事件访谈整理.md，全部为演练样本，非真实基线
+    box(ax, 12.0, 8.75,
+        "典型事件 EVT-20260912-01\n"
+        "B2 区 · 3 号装卸口\n"
+        "A 撤 14-16 / B 进 15-17\n"
+        "重叠 60 分钟\n"
+        "T-1 天 17:20 才发现\n"
+        "翻 3 版本 · 耗时 95 分钟\n"
+        "返工 2 次 · 影响 4 方",
+        C_PAIN, w=2.55, h=2.30, fs=8.2)
 
-    ax.text(12.0, y1 - 0.2, "现状痛点", fontsize=11, fontweight="bold", color="#B23A3A", ha="center")
+    # 侧注②：口径冲突
+    box(ax, 12.0, y3, "销售希望延长\n客户使用时间\nvs 运营保留\n恢复检查时间\n（f50 口径冲突）", C_PAIN, w=2.2, h=1.5, fs=9)
+
+    ax.text(12.0, 10.05, "典型事件 / 现状痛点", fontsize=11, fontweight="bold", color="#B23A3A", ha="center")
 
     fig.savefig(OUT / "流程图-现状.png", bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -174,6 +185,18 @@ def draw_future():
     arrow(ax, (3.75, y7 - 0.55), (2.6, y8 + 0.48), label="是", lx=-0.3, ly=0.1)
     arrow(ax, (3.82, y8), (4.48, y8))
     arrow(ax, (7.52, y8), (8.53, y8))
+
+    # 侧注：同一典型事件在改造后的拦截效果（与图一形成对照）
+    box(ax, 12.1, 5.6,
+        "典型事件 · 改造后\n"
+        "EVT-20260912-01\n"
+        "9/9 B 活动申请进入即提示：\n"
+        "3 号装卸口重叠 60 分钟\n"
+        "附依据单号与影响对象\n"
+        "→ 由 T-1 天提前至 T-3 天\n"
+        "仍由授权人员确认\n"
+        "不自动改期 / 不锁档",
+        C_DIGIT, w=3.0, h=2.6, fs=8.4)
 
     fig.savefig(OUT / "流程图-数智化转型后.png", bbox_inches="tight", facecolor="white")
     plt.close(fig)

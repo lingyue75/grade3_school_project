@@ -77,6 +77,27 @@ python scripts/generate_briefs.py
 
 入口见 `docs/project-brief/README.md`。所有文件自带演练虚构声明；CSV 为 `utf-8-sig` 编码。
 
+## 今日完整流程 · 8 项交付包
+
+按课程清单逐项交付，**对照表见 `docs/交付清单-今日完整流程.md`**：
+
+| # | 交付物 | 关键文件 |
+| --- | --- | --- |
+| 1 | 六人访谈记录 | `project-brief/六人访谈记录.{md,json,csv}` |
+| 2 | 项目基本简报四件套 | `项目基本简报-四件套.zip` + `project-brief/` |
+| 3 | 典型事件访谈 | `典型事件访谈记录.txt`、`典型事件访谈整理.docx` |
+| 4 | 行业分析 | `行业分析-会展场馆数智化转型.{md,docx}` |
+| 5 | 改造前 / 后流程图 | `流程图-现状.png`、`流程图-数智化转型后.png`（融入典型事件） |
+| 6 | 需求定义 | `需求定义文档.docx`（痛点 / AI 改造优先级 / 规格与追溯矩阵 / 验收清单） |
+| 7 | 详细设计方案 | `设计方案-场馆档期冲突提示工具.{md,docx}` |
+| 8 | 三档报价与投入产出 | `报价方案.docx`（低 / 中 / 高 + ROI 阈值测算） |
+
+```bash
+python scripts/generate_briefs.py       # 说明文件三格式
+python scripts/generate_flowcharts.py   # 两张流程图
+python scripts/generate_quote.py        # 报价方案 md
+```
+
 ## 目录结构
 
 ```
@@ -94,7 +115,8 @@ venue-schedule-tool/
 │   └── utils/         # 样例数据读写
 ├── docs/
 │   ├── project-brief/ # ★ 说明文件包：6 套 × 3 格式（json/md/csv）+ 索引
-│   └── ...            # 业务挖掘报告、行业分析、设计方案、报价单、流程图、Agent 设计
+│   └── ...            # 交付清单、典型事件访谈、需求定义、报价方案、
+│                      # 业务挖掘报告、行业分析、设计方案、报价单、流程图、Agent 设计
 ├── tests/             # pytest 测试
 ├── examples/          # 30 样本回放 demo、Agent 三条轨迹
 ├── scripts/           # generate_briefs.py、构建 / 部署脚本
