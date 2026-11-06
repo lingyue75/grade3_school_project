@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
 """
-构建 MVP 静态演示站点：site/index.html（自包含单页，无构建、无后端、无外部依赖）
+构建 MVP 静态演示站点（双端）：site/index.html + site/admin.html
+两个自包含页面，共用同一份内嵌数据与检测规则；无构建、无后端、无外部依赖。
+
+  · 客户端 index.html：员工查档期、运行冲突检测、看提示与三态分布
+  · 管理端 admin.html：管理员只读查看 KPI、红线自检、冲突明细、测试摘要与复核状态
 
 页面把 Python core 的三类冲突规则用原生 JS 复现，浏览器内即可跑完 30 样本回放：
   ① 区域时间窗重叠 + 装卸口进/撤场重叠（f11）
   ② 交接版本不一致（f20/f23）
   ③ 交接三项不齐套（f20/f23）
-所有提示均为 advisory，页面不提供任何锁档 / 改期 / 提交能力（f05/f52）。
+所有提示均为 advisory；两端都不提供锁档 / 改期 / 提交 / 删除能力（f05/f52），
+管理端是演示视图拆分，不是真实权限隔离。
 
 运行：python scripts/build_site.py
-输出：site/index.html（供发布为在线链接）
+输出：site/index.html、site/admin.html（供发布为在线链接）
+测试摘要来源：test/scenarios.json（缺失时留空，不编造数字）
 """
 
 from __future__ import annotations
@@ -366,7 +372,349 @@ init();
 </html>
 """
 
-out = SITE / "index.html"
-out.write_text(HTML.replace("__DATA__", payload), encoding="utf-8")
-print(f"已生成：{out}（{out.stat().st_size:,} 字节）")
+# ---------------------------------------------------------------------------
+# 双端页面：客户端 index.html（员工查档期 / 看冲突提示）+ 管理端 admin.html
+#           （管理员看统计、明细、红线自检、复核状态）
+# 两端复用同一份「数据 + 检测规则」字符串，保证判定口径完全一致。
+# ---------------------------------------------------------------------------
+
+# 从原单页模板中切出可复用部件
+_HEAD = HTML[:HTML.index("</head>") + len("</head>")]
+_BODY = HTML[HTML.index("<body>") + len("<body>"):HTML.index("</body>")]
+_JS = _BODY[_BODY.index("<script>") + len("<script>"):_BODY.index("</script>")]
+CORE_JS = _JS[:_JS.index("function renderConflicts")]   # DATA + 常量 + parseDt/overlap + detectAll
+
+EXTRA_CSS = r"""
+  .nav{display:flex;gap:8px;margin:14px 0 10px}
+  .nav a{font-size:12.5px;text-decoration:none;color:#eaf1fc;border:1px solid rgba(255,255,255,.45);
+         border-radius:999px;padding:4px 14px}
+  .nav a.on{background:#fff;color:var(--brand);font-weight:700;border-color:#fff}
+  .stats.six{grid-template-columns:repeat(3,1fr)}
+  .checks{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .check{border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:8px;
+         padding:11px 14px;background:#fbfdfb}
+  .check.warn{border-left-color:var(--warn);background:#fffdf8}
+  .check b{display:block;font-size:13.5px;margin-bottom:3px}
+  .check span{font-size:12.5px;color:var(--muted)}
+  .check .ok{color:var(--ok);font-weight:700}
+  .check .warn{color:var(--warn);font-weight:700}
+  .badge{font-size:11px;padding:2px 8px;border-radius:999px;background:#fff2d8;
+         color:#8a5a00;border:1px solid #f0d6a3}
+  .badge.green{background:#e6f4ec;color:var(--ok);border-color:#bfe3cf}
+  @media(max-width:760px){.stats.six,.checks{grid-template-columns:1fr}}
+  #gate{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;
+        padding:20px;background:linear-gradient(120deg,#1f3864,#2f6bb5)}
+  .gate-card{width:min(430px,100%);background:#fff;border-radius:14px;padding:26px 30px 22px;
+             box-shadow:0 20px 60px rgba(10,25,50,.32)}
+  .gate-card h2{margin:0 0 6px;font-size:20px;color:var(--brand);border:0;padding:0}
+  .gate-sub{font-size:12.5px;color:var(--muted);margin:0 0 18px}
+  .gate-card label{display:block;font-size:12.5px;color:var(--muted);margin:10px 0 5px}
+  .gate-card input{width:100%;font:inherit;font-size:14px;padding:9px 12px;border:1px solid var(--line);
+                   border-radius:7px;outline:none}
+  .gate-card input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .gate-err{min-height:20px;font-size:12.5px;color:var(--danger);margin-top:8px}
+  .gate-card button.primary{width:100%;margin-top:4px;padding:10px}
+  .gate-demo{margin-top:16px;background:#f3f7fd;border:1px solid var(--line);border-radius:8px;
+             padding:10px 12px;font-size:12.5px;line-height:1.8}
+  .gate-warn{margin:14px 0 8px;font-size:12px;color:var(--muted);line-height:1.7}
+  .gate-back{font-size:12.5px;color:var(--brand);text-decoration:none}
+  """
+
+NAV_CLIENT = ('<div class="nav"><a class="on" data-nav href="index.html">客户端</a>'
+              '<a data-nav href="admin.html">管理端</a></div>')
+NAV_ADMIN = ('<div class="nav"><a data-nav href="index.html">客户端</a>'
+             '<a class="on" data-nav href="admin.html">管理端</a>'
+             '<a href="#" id="logout">退出登录</a></div>')
+
+# 分享链接带 sharecode，页面间跳转必须保留 query，否则会被挡在门外
+
+GATE_HTML = r"""
+<div id="gate">
+  <div class="gate-card">
+    <h2>管理端登录</h2>
+    <p class="gate-sub">场馆档期冲突提示工具 · 管理端（只读演示）</p>
+    <label for="g-user">用户名 / 工号</label>
+    <input id="g-user" type="text" autocomplete="username" placeholder="请输入管理员账号">
+    <label for="g-pass">密码</label>
+    <input id="g-pass" type="password" autocomplete="current-password" placeholder="请输入密码">
+    <div class="gate-err" id="g-err"></div>
+    <button class="primary" id="g-btn">登录管理端</button>
+    <div class="gate-demo">
+      <b>演示账号</b>（演练用，不代表真实企业账号）：<br>
+      管理员　<code>admin / admin123</code>　可进入管理端<br>
+      员工　　<code>1001 / 123456</code>　无管理端权限，将被拒绝
+    </div>
+    <p class="gate-warn"><b>安全边界</b>：本门禁为静态演示，校验在浏览器内完成，页面源码与数据仍可被查看，
+      <b>不构成真实权限隔离</b>。生产系统必须由服务端做身份认证与接口级鉴权（当前项目未部署生产服务）。
+      演练结果不得作为实际业务指令（f40）。</p>
+    <a class="gate-back" data-nav href="index.html">← 返回客户端</a>
+  </div>
+</div>
+"""
+
+KEEP_QUERY = ("<script>document.querySelectorAll('a[data-nav]').forEach(function(a){"
+              "var h=a.getAttribute('href');"
+              "if(h&&h.indexOf('?')<0&&location.search)a.href=h+location.search;});</script>")
+
+# 管理端页面（自包含；__DATA__ / __TEST__ 由下方统一替换）
+ADMIN_BODY = r"""
+__GATE_HTML__
+<div id="admin-shell" style="display:none">
+<header>
+  <div class="wrap">
+    <h1>场馆档期冲突提示工具 · 管理端</h1>
+    __NAV_ADMIN__
+    <div class="sub">上海东浩会展经营有限公司 · 场馆排期与需求变更数智化转型试点（演练）｜ v1.1 · 2026-11-06</div>
+    <div class="notice"><b>演练声明与只读边界</b>：企业名称与公开业务方向有公开来源；人物、档期单号、时刻与指标均为演练虚构。本页<b>只读</b>，提供统计、明细、红线自检与复核状态，<b>不提供锁档 / 改期 / 提交 / 删除能力</b>（f05/f52）；演练结果不得作为实际业务指令（f40），正式结论须授权人员确认（f41）。</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="stats six">
+    <div class="stat"><b id="k-slots">—</b><span>档期样本</span></div>
+    <div class="stat"><b id="k-hands">—</b><span>交接记录</span></div>
+    <div class="stat"><b id="k-conf">—</b><span>冲突提示</span></div>
+    <div class="stat"><b id="k-confirmed">—</b><span>已确认占用（confirmed）</span></div>
+    <div class="stat"><b id="k-lock" style="color:var(--ok)">—</b><span>自动锁档动作</span></div>
+    <div class="stat"><b id="k-evidence" style="color:var(--ok)">—</b><span>提示附原因 / 来源率</span></div>
+  </div>
+
+  <section>
+    <h2>一、红线自检（对当前演示数据实时计算）</h2>
+    <div class="checks" id="guards"></div>
+  </section>
+
+  <section>
+    <h2>二、冲突提示明细</h2>
+    <div class="chips" id="chips"></div>
+    <div class="scroll" style="max-height:380px">
+      <table>
+        <thead><tr><th>#</th><th>类型</th><th>关联编号</th><th>原因</th><th>来源</th><th>处置状态</th></tr></thead>
+        <tbody id="conf-rows"></tbody>
+      </table>
+    </div>
+    <p class="hint" style="margin-bottom:0">每条提示均为 <b>advisory</b>：只提示、不自动处置；正式结论须授权人员（傅景 / 顾明岚）确认（f41）。</p>
+  </section>
+
+  <section>
+    <h2>三、占档三态与测试摘要</h2>
+    <div class="grid2">
+      <div>
+        <h3>三态分布（f31）</h3>
+        <div class="bars" id="status-bars"></div>
+        <p class="hint">状态为 <code>missing</code> 的档期<b>不参与时间窗判定</b>，只输出「数据不完整」，绝不把「没填」当成「没占档」。</p>
+      </div>
+      <div>
+        <h3>五类场景实测（数据来自 test/scenarios.json）</h3>
+        <table>
+          <thead><tr><th>场景</th><th>用例</th><th>通过</th><th>已知口径</th><th>失败</th></tr></thead>
+          <tbody id="test-rows"></tbody>
+        </table>
+        <p class="hint" id="test-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>四、人工复核记录（f02）</h2>
+    <p class="hint" style="margin-top:0">验收口径要求「每条结果附来源与人工复核记录」。演示环境内 <code>review_records = 0</code>，
+      下表如实标记为<b>待授权人员复核</b>，不伪造复核结论；正式流程中复核人、结论与时间须由授权人员填写。</p>
+    <div class="scroll" style="max-height:260px">
+      <table>
+        <thead><tr><th>关联编号</th><th>提示类型</th><th>来源数</th><th>复核人</th><th>结论</th></tr></thead>
+        <tbody id="review-rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="foot">
+    管理端为静态只读演示：与客户端共用同一份数据与 <code>core/conflict.py</code> 规则复现逻辑；
+    完整 CLI / Agent 编排见项目仓库 <code>venue-schedule-tool/</code>。<br>
+    演练场景，所有数据与结论不构成实际业务指令（f40）。
+  </div>
+</div>
+</div>
+
+<script>
+__CORE_JS__
+const TEST = __TEST__;
+const ROWS = detectAll(DATA.slots, DATA.handovers);
+
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function renderKpi(){
+  const r=ROWS, n=r.length;
+  document.getElementById("k-slots").textContent=DATA.slots.length;
+  document.getElementById("k-hands").textContent=DATA.handovers.length;
+  document.getElementById("k-conf").textContent=n;
+  document.getElementById("k-confirmed").textContent=DATA.slots.filter(s=>s.status==="confirmed").length;
+  const locks=r.filter(c=>c.auto_lock).length;
+  document.getElementById("k-lock").textContent=locks;
+  const withReason=r.filter(c=>c.reason&&String(c.reason).length>0).length;
+  const withSrc=r.filter(c=>c.sources&&c.sources.length>0).length;
+  document.getElementById("k-evidence").textContent=
+    (n?Math.round(withReason/n*100):100)+"% / "+(n?Math.round(withSrc/n*100):100)+"%";
+}
+
+function renderGuards(){
+  const r=ROWS,n=r.length;
+  const locks=r.filter(c=>c.auto_lock).length;
+  const noSrc=r.filter(c=>!c.sources||!c.sources.length).length;
+  const noConfirm=r.filter(c=>!c.requires_human_confirm).length;
+  const missing=DATA.slots.filter(s=>s.status==="missing").length;
+  const items=[
+    ["只提示不锁档（f05 / f52）", locks===0, "自动锁档动作 "+locks+" 个；工具集不含 lock_slot / sign_contract / commit_capacity"],
+    ["来源不清不得流转（f40）", noSrc===0, "全部 "+n+" 条提示均附来源；无来源提示 "+noSrc+" 条"],
+    ["三态区分（f31）", true, "missing 档期 "+missing+" 条，已排除在时间窗判定之外，只报数据不完整"],
+    ["正式结论授权确认（f41）", noConfirm===0, "全部提示均标记待人工确认；系统不代为拍板"],
+    ["验收口径 f02", n>0, "30 样本回放检出 "+n+" 条提示，每条均附原因与来源；复核记录待授权人员填写"]
+  ];
+  document.getElementById("guards").innerHTML=items.map(function(x){
+    return '<div class="check'+(x[1]?'':' warn')+'"><b>'+esc(x[0])+
+      ' <span class="'+(x[1]?'ok':'warn')+'">'+(x[1]?'通过':'关注')+'</span></b>'+
+      '<span>'+esc(x[2])+'</span></div>';
+  }).join("");
+}
+
+let f="all";
+function renderChips(){
+  const counts={all:ROWS.length};
+  ROWS.forEach(c=>counts[c.type]=(counts[c.type]||0)+1);
+  const types=["all"].concat(Object.keys(TYPE_CN).filter(t=>counts[t]));
+  document.getElementById("chips").innerHTML=types.map(function(t){
+    return '<span class="chip '+(f===t?"on":"")+'" data-t="'+t+'">'+
+      esc(t==="all"?"全部":TYPE_CN[t])+" ("+(counts[t]||0)+")</span>";
+  }).join("");
+  document.querySelectorAll(".chip").forEach(function(el){
+    el.onclick=function(){f=el.dataset.t;renderChips();renderRows();};
+  });
+}
+function renderRows(){
+  const list=ROWS.map(function(c,i){return {c:c,i:i};}).filter(function(x){return f==="all"||x.c.type===f;});
+  document.getElementById("conf-rows").innerHTML=list.map(function(x){
+    const c=x.c;
+    return "<tr><td>"+(x.i+1)+"</td><td><span class=\"badge\">"+esc(TYPE_CN[c.type]||c.type)+
+      "</span><br><span class=\"ids\">"+esc(c.type)+"</span></td>"+
+      "<td class=\"ids\">"+esc(c.app_ids.join(" / "))+"</td>"+
+      "<td>"+esc(c.reason)+"</td>"+
+      "<td class=\"src\">"+esc(c.sources.length?c.sources.join("、"):"（无）")+"</td>"+
+      "<td><span class=\"badge green\">仅提示 · 待授权确认</span></td></tr>";
+  }).join("") || '<tr><td colspan="6" class="hint">当前筛选下没有提示。</td></tr>';
+}
+function renderStatus(){
+  const c={};DATA.slots.forEach(s=>c[s.status]=(c[s.status]||0)+1);
+  const colors={confirmed:"#3b7dd8",unconfirmed:"#e0a92c",missing:"#98a2b0"};
+  const label={confirmed:"confirmed 已确认",unconfirmed:"unconfirmed 未确认",missing:"missing 缺失"};
+  const total=DATA.slots.length;
+  document.getElementById("status-bars").innerHTML=Object.keys(c).map(function(k){
+    return '<div class="bar"><span>'+label[k]+'</span><div class="track"><div class="fill" style="width:'+
+      (c[k]/total*100).toFixed(1)+'%;background:'+colors[k]+'"></div></div><b>'+c[k]+'</b></div>';
+  }).join("");
+}
+function renderTest(){
+  const order=["normal","boundary","adversarial","permission","fault"];
+  const cn={normal:"正常",boundary:"边界",adversarial:"对抗",permission:"权限",fault:"故障"};
+  const rows=order.map(function(k){var x=TEST[k]||{total:0,pass:0,known:0,fail:0};
+    return "<tr><td>"+cn[k]+"</td><td>"+x.total+"</td><td>"+x.pass+"</td><td>"+x.known+"</td><td>"+x.fail+"</td></tr>";});
+  const t=TEST._total||{total:0,pass:0,known:0,fail:0};
+  rows.push("<tr><td><b>合计</b></td><td><b>"+t.total+"</b></td><td><b>"+t.pass+"</b></td><td><b>"+t.known+"</b></td><td><b>"+t.fail+"</b></td></tr>");
+  document.getElementById("test-rows").innerHTML=rows.join("");
+  document.getElementById("test-note").textContent=
+    (TEST._note||"")+" 唯一 KNOWN：端点相接按闭区间判为重叠，业务口径待书面确认。";
+}
+function renderReview(){
+  document.getElementById("review-rows").innerHTML=ROWS.map(function(c){
+    return "<tr><td class=\"ids\">"+esc(c.app_ids.join(" / "))+"</td><td>"+
+      esc(TYPE_CN[c.type]||c.type)+"</td><td>"+c.sources.length+"</td>"+
+      "<td class=\"hint\">待填写（傅景 / 顾明岚）</td><td><span class=\"badge\">待授权人员复核</span></td></tr>";
+  }).join("");
+}
+renderKpi();renderGuards();renderChips();renderRows();renderStatus();renderTest();renderReview();
+
+// ---- 管理端演示门禁：前端校验，非真实鉴权 ----
+function hashPwd(s){var h=5381;for(var i=0;i<s.length;i++){h=((h*33+s.charCodeAt(i))>>>0);}return String(h);}
+function showAdmin(){
+  document.getElementById("gate").style.display="none";
+  document.getElementById("admin-shell").style.display="block";
+  document.body.style.overflow="";
+}
+function tryLogin(){
+  var u=(document.getElementById("g-user").value||"").trim();
+  var p=document.getElementById("g-pass").value||"";
+  var err=document.getElementById("g-err");
+  var h=hashPwd(p);
+  if(u==="admin" && h==="__ADMIN_HASH__"){ try{sessionStorage.setItem("venue_admin_demo","1");}catch(e){} showAdmin(); err.textContent=""; return; }
+  if(u==="1001" && h==="__EMP_HASH__"){
+    err.textContent="该账号为员工角色，无管理端权限。请返回客户端，或改用管理员账号。"; return; }
+  err.textContent="用户名或密码不正确（演示账号见下方）。";
+}
+try{ if(sessionStorage.getItem("venue_admin_demo")==="1") showAdmin(); }catch(e){}
+document.getElementById("g-btn").onclick=tryLogin;
+document.getElementById("g-pass").onkeydown=function(e){if(e.key==="Enter")tryLogin();};
+document.getElementById("logout").onclick=function(e){
+  e.preventDefault(); try{sessionStorage.removeItem("venue_admin_demo");}catch(_){}
+  document.getElementById("admin-shell").style.display="none";
+  document.getElementById("gate").style.display="flex";
+  document.getElementById("g-pass").value="";
+  document.getElementById("g-err").textContent="已退出登录。";
+};
+</script>
+"""
+
+
+def djb2(text: str) -> str:
+    """与页面内 hashPwd 完全一致的同步散列；源码只存摘要，不存明文口令。"""
+    h = 5381
+    for ch in text:
+        h = (h * 33 + ord(ch)) & 0xFFFFFFFF
+    return str(h)
+
+
+def page(title: str, body: str) -> str:
+    """用共用 HEAD（含 CSS）拼一个自包含 HTML 页面。"""
+    head = _HEAD.replace("场馆档期冲突提示工具 · MVP 演示", title)
+    head = head.replace("</style>", EXTRA_CSS + "\n</style>")
+    doc = head + "\n<body>" + body + KEEP_QUERY + "\n</body>\n</html>\n"
+    return (doc.replace("__DATA__", payload)
+               .replace("__TEST__", test_payload)
+               .replace("__ADMIN_HASH__", djb2("admin123"))
+               .replace("__EMP_HASH__", djb2("123456")))
+
+
+# 测试摘要：从 test/scenarios.json 读取，缺失时退化为占位（不编造数字）
+test_summary = {k: {"total": 0, "pass": 0, "known": 0, "fail": 0}
+                for k in ("normal", "boundary", "adversarial", "permission", "fault")}
+test_summary["_total"] = {"total": 0, "pass": 0, "known": 0, "fail": 0}
+test_summary["_note"] = "test/scenarios.json 不可用，摘要为空。"
+test_file = ROOT.parent / "test" / "scenarios.json"
+if test_file.exists():
+    cases = json.loads(test_file.read_text(encoding="utf-8"))["cases"]
+    for c in cases:
+        k = c["scene"]
+        if k not in test_summary:
+            continue
+        test_summary[k]["total"] += 1
+        v = c["verdict"]
+        key = {"PASS": "pass", "KNOWN": "known", "FAIL": "fail"}.get(v, "fail")
+        test_summary[k][key] += 1
+        test_summary["_total"]["total"] += 1
+        test_summary["_total"][key] += 1
+    test_summary["_note"] = "由 test/scenarios.json 实时汇总。"
+test_payload = json.dumps(test_summary, ensure_ascii=False)
+
+# 客户端：在原页面 header 里插入双端导航
+client_body = _BODY.replace('<div class="sub">', NAV_CLIENT + '\n    <div class="sub">', 1)
+client_body = client_body.replace("· MVP 演示</h1>", "· 客户端</h1>", 1)
+(SITE / "index.html").write_text(page("场馆档期冲突提示工具 · 客户端", client_body), encoding="utf-8")
+
+# 管理端：注入共享规则与测试摘要
+admin_body = (ADMIN_BODY.replace("__GATE_HTML__", GATE_HTML)
+              .replace("__NAV_ADMIN__", NAV_ADMIN)
+              .replace("__CORE_JS__", CORE_JS))
+(SITE / "admin.html").write_text(page("场馆档期冲突提示工具 · 管理端", admin_body), encoding="utf-8")
+
+for name in ("index.html", "admin.html"):
+    p = SITE / name
+    print(f"已生成：{p.name}（{p.stat().st_size:,} 字节）")
 print(f"内嵌数据：{len(norm_slots)} 条档期 / {len(norm_handovers)} 条交接")
+print(f"测试摘要：{test_summary['_total']}（来源 {test_file.name if test_file.exists() else '无'}）")

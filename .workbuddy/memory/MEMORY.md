@@ -17,8 +17,18 @@
   行业分析、两张流程图、需求定义、设计方案、报价方案、测试方案、
   `(1)正常场景测试.docx` ～ `(5)故障场景测试.docx`、MVP 上线地址。
 - 说明文件包 6 套 × json/md/csv 也在 `docs/` 平铺，索引为 `docs/说明文件包索引.md`。
+- **★ Test 三项交付物单独放仓库根 `test/`**（21 文件 + `test/README.md` 索引，平铺无子目录）：
+  测试方案、(1)~(5) 场景测试 docx/md/png、scenarios.json、执行汇总、MVP 上线地址文档。
+  `docs/` 只放清单 1-8 项（39 文件）。`run_scenario_tests.py` 输出到 `test/`（`VENUE_TEST_DIR` 可覆盖）。
 - `venue-schedule-tool/` 只放工程代码：src / tests / examples / scripts / config / data / site / .github。
-  4 个生成脚本输出写入顶层 `docs/`，可用环境变量 `VENUE_DOCS_DIR` 改到临时目录做验证。
+  前 3 个生成脚本输出写入顶层 `docs/`（`VENUE_DOCS_DIR` 可覆盖）。
+- **MVP 分双端**：`site/index.html` 客户端（开放，查档期/跑冲突检测）+ `site/admin.html` 管理端
+  （只读统计/红线自检/冲突明细/复核状态）。`build_site.py` 同时生成两页，共用同一份数据与 detectAll 规则。
+- 管理端有**用户名/密码登录界面**（演示账号见 `test/MVP上线部署地址.md`）：管理员可进、
+  员工账号被拒、支持会话保持与退出。源码只存散列摘要。**必须如实标注为前端演示门禁，不是真实鉴权**——
+  静态页面无服务端，页面源码与数据仍可查看；生产须服务端认证 + 接口级鉴权。
+- 线上：https://venue-schedule-mvp.app.workbuddy.host/?sharecode=4KSZQPBMRT
+  管理端 `/admin.html?sharecode=4KSZQPBMRT`；`workbuddy_sites_deploy` 重发同一目录即可更新，链接不变。
 - 单一数据源约定不变：改内容改脚本重跑（`generate_briefs.py` 等），不手改单个格式文件；
   CSV 用 `utf-8-sig`；docx 由同名 md 经本地编辑器转换，场景文档需另行插图。
 

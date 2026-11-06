@@ -27,19 +27,22 @@
 
 清单第 1、2 项的完整三格式（6 套 × json/md/csv = 18 个文件）也在本目录平铺，索引见 `说明文件包索引.md`。
 
-## 二、Test 三项
+## 二、Test 三项 → 单独文件夹 `test/`
 
-| # | 要求 | 本目录中的文件 |
+Test 三项的交付物**不在本目录**，统一放在仓库顶层 **`test/`**（与本目录平级），逐条索引见 `test/README.md`：
+
+| # | 要求 | 位置 |
 | --- | --- | --- |
-| 1 | 基于正常 / 边界 / 对抗 / 权限 / 故障五类场景，设计具体量化 test 方案（md + docx） | `测试方案-五类场景.md` / `测试方案-五类场景.docx` |
-| 2 | 每个场景一份可视化测试过程文档，有图有过程（docx） | `(1)正常场景测试.docx`、`(2)边界场景测试.docx`、`(3)对抗场景测试.docx`、`(4)权限场景测试.docx`、`(5)故障场景测试.docx` |
-| 3 | MVP 系统上线部署网站地址（文档） | `MVP上线部署地址.md` / `MVP上线部署地址.docx` |
+| 1 | 五类场景量化 test 方案（md + docx） | `test/测试方案-五类场景.{md,docx}` |
+| 2 | 每场景可视化测试过程文档（有图有过程，docx） | `test/(1)正常场景测试.docx` ～ `test/(5)故障场景测试.docx` |
+| 3 | MVP 系统上线部署网站地址（文档） | `test/MVP上线部署地址.{md,docx}` |
 
-第 2 项的每份 docx 都含逐条过程表、实测输出、耗时判定与一张「四阶段链路 + 逐条结果」插图；同名 `.md`、`.png` 也在本目录。
-另有结构化实测数据 `scenarios.json` 与 `测试执行汇总.md`。
+**上线地址（双端）**：
+- 客户端：https://venue-schedule-mvp.app.workbuddy.host/?sharecode=4KSZQPBMRT
+- 管理端：https://venue-schedule-mvp.app.workbuddy.host/admin.html?sharecode=4KSZQPBMRT
 
-**上线地址**：https://venue-schedule-mvp.app.workbuddy.host/?sharecode=4KSZQPBMRT
-（静态演示站点，无后端 / 数据库 / 登录，不代表生产系统上线。）
+静态演示站点，无后端 / 数据库 / 服务端鉴权；管理端为只读视图拆分，不是真实权限隔离，**不代表生产系统上线**。
+管理端带演示登录界面：账号 `admin / admin123`，员工账号 `1001 / 123456` 会被拒绝；门禁为前端演示，不是服务端鉴权。
 
 ## 三、其余文件
 
@@ -53,17 +56,19 @@
 
 ## 四、再生成方式
 
-所有文档由 `venue-schedule-tool/scripts/` 下的脚本生成，**输出直接写入本目录**：
+清单 1–8 项文档由 `venue-schedule-tool/scripts/` 下的脚本生成，**输出写入本目录 `docs/`**；
+Test 三项由 `run_scenario_tests.py` 生成，**输出写入 `test/`**：
 
 ```bash
 cd venue-schedule-tool
-python scripts/generate_briefs.py        # 6 套说明文件 + 说明文件包索引.md
-python scripts/generate_flowcharts.py   # 两张流程图
-python scripts/generate_quote.py        # 报价方案.md
-python scripts/run_scenario_tests.py    # 测试方案、5 份场景 md/png、scenarios.json
+python scripts/generate_briefs.py        # → docs/：6 套说明文件 + 说明文件包索引.md
+python scripts/generate_flowcharts.py   # → docs/：两张流程图
+python scripts/generate_quote.py        # → docs/：报价方案.md
+python scripts/run_scenario_tests.py    # → test/：测试方案、5 份场景 md/png、scenarios.json
+python scripts/build_site.py            # → site/：客户端 index.html + 管理端 admin.html
 ```
 
-- 需要写到别处时设环境变量 `VENUE_DOCS_DIR`，例如用于临时验证而不污染交付目录。
+- 需要写到别处时设环境变量：前三个脚本用 `VENUE_DOCS_DIR`，测试执行器用 `VENUE_TEST_DIR`，便于临时验证而不污染交付目录。
 - `.docx` 由同名 `.md` 经本地编辑器转换（表格与插图保留）；改内容请先改 `.md` 或生成脚本，再重转 docx，避免两种格式不一致。
 - `run_scenario_tests.py` 每次运行会刷新执行时间与耗时毫秒，若只需验证、不打算更新交付物，运行后请还原生成物。
 

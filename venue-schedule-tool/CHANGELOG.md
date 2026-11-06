@@ -2,6 +2,23 @@
 
 本项目的所有重要变更都记录在这里。格式参考 Keep a Changelog，版本遵循语义化版本。
 
+## [0.7.0] - 2026-11-06 · MVP 拆双端、Test 独立成 test/、管理端登录
+
+### 新增 / 变更
+- MVP 由单页拆为**客户端 `index.html` + 管理端 `admin.html`**，共用同一份内嵌数据与 `detectAll` 规则。
+  管理端只读：6 项 KPI、5 项红线自检、11 条冲突明细（可筛选）、三态分布、
+  从 `test/scenarios.json` 汇总的五类场景实测、人工复核记录表（如实标记 review_records=0）。
+- 管理端新增**用户名 / 密码登录界面**：管理员 / 员工两种演示角色，员工越权被拒，
+  支持会话保持与退出登录；页面只存口令散列摘要。明确标注为静态演示门禁、非真实鉴权。
+- **Test 三项交付物（21 个文件）移入仓库根 `test/`**，新增 `test/README.md` 索引；
+  `run_scenario_tests.py` 输出改到 `test/`，支持 `VENUE_TEST_DIR` 覆盖。
+- 上线地址文档（双端 URL + 登录说明）、docs/README、项目 README 目录树与路径引用同步更新。
+
+### 回归
+- 两端 JS 与 Python `detect_all` 逐类一致（11 条：区域 7 / 装卸口 1 / 版本 1 / 交接 2）。
+- Node DOM stub 实跑管理端渲染（KPI / 红线 / 明细 / 复核）与登录 4 种情形全部符合预期。
+- 线上客户端、管理端、index.html 三个 URL 均 HTTP 200；pytest 23 passed；30 样本回放 f02 满足。
+
 ## [0.6.0] - 2026-11-06 · 按课程清单重排为顶层 docs/ 平铺结构
 
 ### 变更
@@ -24,14 +41,14 @@
 ### 新增
 - `scripts/run_scenario_tests.py`：五类场景（正常/边界/对抗/权限/故障）共 **29 条**量化用例，
   真实调用 src/ 模块、逐条计时采集；一次执行 PASS 28 / KNOWN 1 / FAIL 0。
-- `docs/测试方案-五类场景.{md,docx}`：用例清单、量化指标定义、阈值、红线专项、
+- `test/测试方案-五类场景.{md,docx}`：用例清单、量化指标定义、阈值、红线专项、
   已知口径与缺陷登记（K-01 闭区间端点、K-02 进撤场时长未叠加、K-03 缺列未做 schema 校验、K-04 待补来源）。
-- `docs/(1)~(5) 各场景测试.docx`：每份含逐条过程表、
+- `test/(1)~(5) 各场景测试.docx`：每份含逐条过程表、
   实测输出、耗时、判定与一张「四阶段链路 + 逐条耗时判定」过程图；另存同名 .md / .png
   与结构化结果 `scenarios.json`、汇总 `测试执行汇总.md`。
 - `site/index.html` + `scripts/build_site.py`：静态 MVP 演示站点，浏览器内复现
   core 三类冲突规则；**已上线** https://venue-schedule-mvp.app.workbuddy.host/?sharecode=4KSZQPBMRT
-- `docs/MVP上线部署地址.{md,docx}`：分享链接、功能清单、JS/Python 一致性对照、
+- `test/MVP上线部署地址.{md,docx}`：分享链接、功能清单、JS/Python 一致性对照、
   边界声明、更新与下线方式、管理入口。
 
 ### 验证

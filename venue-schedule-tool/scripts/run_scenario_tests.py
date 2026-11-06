@@ -5,7 +5,7 @@
 用途
 ----
 * 真实调用主项目 src/ 下的模块（不 mock、不编造结果），逐条执行测试用例并采集实测输出与耗时。
-* 产出：docs/scenarios.json（结构化实测数据）、5 张场景可视化 PNG、
+* 产出：test/scenarios.json（结构化实测数据）、5 张场景可视化 PNG、
   1 份《测试方案》md、5 份《XX场景测试》md（供转 docx）、1 份执行汇总 md。
 * 所有 md 源稿刻意不使用 Markdown 代码块与全角特殊字符，保证本地编辑器能稳定转成 docx。
 
@@ -43,8 +43,8 @@ matplotlib.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei"]
 matplotlib.rcParams["axes.unicode_minus"] = False
 
 DATA = ROOT / "data"
-OUT = Path(os.environ.get("VENUE_DOCS_DIR") or (ROOT.parent / "docs"))
-OUT.mkdir(parents=True, exist_ok=True)  # 仓库顶层 docs/（平铺，无子目录）
+OUT = Path(os.environ.get("VENUE_TEST_DIR") or (ROOT.parent / "test"))
+OUT.mkdir(parents=True, exist_ok=True)  # 仓库顶层 test/（Test 三项交付物，平铺）
 OUT.mkdir(parents=True, exist_ok=True)
 
 DISCLAIMER = (
@@ -785,8 +785,8 @@ def render_plan_md() -> str:
           "## 六、执行与追溯", "",
           "| 项 | 内容 |", "| --- | --- |",
           "| 执行命令 | `python scripts/run_scenario_tests.py` |",
-          "| 结构化结果 | `docs/scenarios.json` |",
-          "| 分场景过程 | `docs/(1)正常场景测试.docx` 等 5 份（含过程图） |",
+          "| 结构化结果 | `test/scenarios.json` |",
+          "| 分场景过程 | `test/(1)正常场景测试.docx` 等 5 份（含过程图） |",
           "| 回归基线 | `pytest tests/ -q`（23 passed）；`examples/demo.py` 30 样本回放退出码 0 |",
           "| 结果用途 | 演练评估与课程交付；不得作为实际业务指令（f40） |", "",
           "## 七、通过判据", "",

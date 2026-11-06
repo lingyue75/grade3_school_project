@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>场馆档期冲突提示工具 · MVP 演示</title>
+<title>场馆档期冲突提示工具 · 客户端</title>
 <style>
   :root{
     --bg:#f6f8fb; --card:#ffffff; --ink:#1f2d3d; --muted:#6b7a8d;
@@ -69,12 +69,48 @@
   code{background:#f1f4f9;padding:1px 5px;border-radius:4px;font-size:12px}
   @media(max-width:760px){.stats,.grid2{grid-template-columns:1fr 1fr}}
   @media(max-width:520px){.stats,.grid2{grid-template-columns:1fr}}
+
+  .nav{display:flex;gap:8px;margin:14px 0 10px}
+  .nav a{font-size:12.5px;text-decoration:none;color:#eaf1fc;border:1px solid rgba(255,255,255,.45);
+         border-radius:999px;padding:4px 14px}
+  .nav a.on{background:#fff;color:var(--brand);font-weight:700;border-color:#fff}
+  .stats.six{grid-template-columns:repeat(3,1fr)}
+  .checks{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .check{border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:8px;
+         padding:11px 14px;background:#fbfdfb}
+  .check.warn{border-left-color:var(--warn);background:#fffdf8}
+  .check b{display:block;font-size:13.5px;margin-bottom:3px}
+  .check span{font-size:12.5px;color:var(--muted)}
+  .check .ok{color:var(--ok);font-weight:700}
+  .check .warn{color:var(--warn);font-weight:700}
+  .badge{font-size:11px;padding:2px 8px;border-radius:999px;background:#fff2d8;
+         color:#8a5a00;border:1px solid #f0d6a3}
+  .badge.green{background:#e6f4ec;color:var(--ok);border-color:#bfe3cf}
+  @media(max-width:760px){.stats.six,.checks{grid-template-columns:1fr}}
+  #gate{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;
+        padding:20px;background:linear-gradient(120deg,#1f3864,#2f6bb5)}
+  .gate-card{width:min(430px,100%);background:#fff;border-radius:14px;padding:26px 30px 22px;
+             box-shadow:0 20px 60px rgba(10,25,50,.32)}
+  .gate-card h2{margin:0 0 6px;font-size:20px;color:var(--brand);border:0;padding:0}
+  .gate-sub{font-size:12.5px;color:var(--muted);margin:0 0 18px}
+  .gate-card label{display:block;font-size:12.5px;color:var(--muted);margin:10px 0 5px}
+  .gate-card input{width:100%;font:inherit;font-size:14px;padding:9px 12px;border:1px solid var(--line);
+                   border-radius:7px;outline:none}
+  .gate-card input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .gate-err{min-height:20px;font-size:12.5px;color:var(--danger);margin-top:8px}
+  .gate-card button.primary{width:100%;margin-top:4px;padding:10px}
+  .gate-demo{margin-top:16px;background:#f3f7fd;border:1px solid var(--line);border-radius:8px;
+             padding:10px 12px;font-size:12.5px;line-height:1.8}
+  .gate-warn{margin:14px 0 8px;font-size:12px;color:var(--muted);line-height:1.7}
+  .gate-back{font-size:12.5px;color:var(--brand);text-decoration:none}
+  
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
-    <h1>场馆档期冲突提示工具 · MVP 演示</h1>
+    <h1>场馆档期冲突提示工具 · 客户端</h1>
+    <div class="nav"><a class="on" data-nav href="index.html">客户端</a><a data-nav href="admin.html">管理端</a></div>
     <div class="sub">上海东浩会展经营有限公司 · 场馆排期与需求变更数智化转型试点（演练）｜ v1.0 · 2026-11-06</div>
     <div class="notice"><b>演练声明</b>：企业名称与公开业务方向有公开来源；人物、档期单号、时刻与指标均为演练虚构，不代表企业实际情况。本页面只提示冲突，<b>不自动锁档 / 签约 / 承诺容量</b>（f05/f52）；演练结果不得作为实际业务指令（f40），正式结论须授权人员确认（f41）。</div>
   </div>
@@ -297,5 +333,6 @@ function init(){
 }
 init();
 </script>
+<script>document.querySelectorAll('a[data-nav]').forEach(function(a){var h=a.getAttribute('href');if(h&&h.indexOf('?')<0&&location.search)a.href=h+location.search;});</script>
 </body>
 </html>

@@ -102,33 +102,34 @@ python scripts/generate_quote.py        # 报价方案 md
 
 | 项 | 文件 / 地址 |
 | --- | --- |
-| 五类场景测试方案 | `docs/测试方案-五类场景.{md,docx}`（29 条用例、量化阈值、通过判据） |
-| 可视化测试过程 | `docs/(1)~(5) 各场景测试.docx`（各含过程图） |
-| 结构化实测结果 | `docs/scenarios.json`；5 张场景 PNG |
+| 五类场景测试方案 | `test/测试方案-五类场景.{md,docx}`（29 条用例、量化阈值、通过判据） |
+| 可视化测试过程 | `test/(1)~(5) 各场景测试.docx`（各含过程图） |
+| 结构化实测结果 | `test/scenarios.json`；5 张场景 PNG |
 | 测试执行器 | `scripts/run_scenario_tests.py`（真实调用 src/，无 mock） |
-| **MVP 上线地址** | **https://venue-schedule-mvp.app.workbuddy.host/?sharecode=4KSZQPBMRT** |
-| 部署说明 | `docs/MVP上线部署地址.{md,docx}` |
+| **MVP 客户端** | **https://venue-schedule-mvp.app.workbuddy.host/?sharecode=4KSZQPBMRT** |
+| **MVP 管理端** | **https://venue-schedule-mvp.app.workbuddy.host/admin.html?sharecode=4KSZQPBMRT** |
+| 部署说明 | `test/MVP上线部署地址.{md,docx}` |
+| 管理端登录 | 演示账号 `admin / admin123`；`1001 / 123456` 为员工、无管理端权限（前端演示门禁，非真实鉴权） |
 
 ```bash
-python scripts/run_scenario_tests.py   # 重跑五类场景，重生成图与过程文档
-python scripts/build_site.py           # 重建 site/index.html（改数据或规则后）
+python scripts/run_scenario_tests.py   # 重跑五类场景，输出到 test/
+python scripts/build_site.py           # 重建 site/index.html + admin.html
 ```
 
-站点为静态 MVP 演示：浏览器内复现 `core/conflict.py` 的三类规则，
-部署前已用 Node 与 Python 逐类比对（均 11 条、分布一致）。**不代表生产系统上线**。
+站点为静态 MVP 演示，分**客户端**（查档期、跑冲突检测、看提示）与**管理端**（只读统计、冲突明细、红线自检、复核状态）两个入口，共用同一份数据与 `core/conflict.py` 规则复现逻辑；部署前已用 Node 与 Python 逐类比对（均 11 条、分布一致）。管理端是视图拆分，**不是真实权限隔离**。**不代表生产系统上线**。
 
 ## 目录结构
 
-> **路径约定**：全部作业交付文档平铺在**仓库顶层 `docs/`**（与本目录 `venue-schedule-tool/` 平级），
-> 不再有 `project-brief/`、`test-results/` 等子目录。下文与表格中的 `docs/xxx` 一律指仓库顶层 docs/。
-> 总索引见 `docs/README.md`。
+> **路径约定**：清单 1–8 项交付文档平铺在**仓库顶层 `docs/`**；**Test 三项单独放在仓库顶层 `test/`**。
+> 两者都与本目录 `venue-schedule-tool/` 平级，均无子目录。总索引分别见 `docs/README.md`、`test/README.md`。
 
 ```
 grade3_school_project/
-├── docs/              # ★ 仓库顶层：全部作业交付文档（平铺，见 docs/README.md）
-│                      #   清单 1-8 项 + Test 三项：六人访谈三格式、基本简报四件套、
-│                      #   典型事件访谈、行业分析、两张流程图、需求定义、设计方案、
-│                      #   报价方案、测试方案、(1)~(5) 场景测试 docx、MVP 上线地址
+├── docs/              # ★ 清单 1-8 项交付文档（平铺，见 docs/README.md）
+│                      #   六人访谈三格式、基本简报四件套、典型事件访谈、行业分析、
+│                      #   两张流程图、需求定义、设计方案、报价方案
+├── test/              # ★ Test 三项交付文档（平铺，见 test/README.md）
+│                      #   测试方案、(1)~(5) 场景测试 docx/md/png、实测数据、上线地址
 ├── venue-schedule-tool/        # 工程代码（my-tool 框架）
 │   ├── README.md              # 本文件
 │   ├── CHANGELOG.md           # 版本记录
@@ -137,7 +138,7 @@ grade3_school_project/
 │   │   ├── core/              # 冲突检测 / 统一编号 / 复核留痕
 │   │   ├── agent/             # Agent 工具与编排（只提示、不锁档）
 │   │   └── utils/             # 样例数据读写
-│   ├── site/index.html        # MVP 静态演示站点（已上线）
+│   ├── site/                  # MVP 双端站点（已上线）：index.html 客户端 + admin.html 管理端
 │   ├── tests/                 # pytest 测试
 │   ├── examples/              # 30 样本回放 demo、Agent 三条轨迹
 │   ├── scripts/               # 全部生成脚本（输出写入仓库顶层 docs/）
