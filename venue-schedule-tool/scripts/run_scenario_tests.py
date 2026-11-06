@@ -5,7 +5,7 @@
 用途
 ----
 * 真实调用主项目 src/ 下的模块（不 mock、不编造结果），逐条执行测试用例并采集实测输出与耗时。
-* 产出：docs/test-results/scenarios.json（结构化实测数据）、5 张场景可视化 PNG、
+* 产出：docs/scenarios.json（结构化实测数据）、5 张场景可视化 PNG、
   1 份《测试方案》md、5 份《XX场景测试》md（供转 docx）、1 份执行汇总 md。
 * 所有 md 源稿刻意不使用 Markdown 代码块与全角特殊字符，保证本地编辑器能稳定转成 docx。
 
@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 import traceback
@@ -42,7 +43,8 @@ matplotlib.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei"]
 matplotlib.rcParams["axes.unicode_minus"] = False
 
 DATA = ROOT / "data"
-OUT = ROOT / "docs" / "test-results"
+OUT = Path(os.environ.get("VENUE_DOCS_DIR") or (ROOT.parent / "docs"))
+OUT.mkdir(parents=True, exist_ok=True)  # 仓库顶层 docs/（平铺，无子目录）
 OUT.mkdir(parents=True, exist_ok=True)
 
 DISCLAIMER = (
@@ -51,11 +53,11 @@ DISCLAIMER = (
 )
 
 SCENES = [
-    ("normal", "正常", "正常场景测试", "验证标准输入下核心能力按预期工作，建立可对比基线"),
-    ("boundary", "边界", "边界场景测试", "验证临界值与三态口径，暴露判定口径而非擅自改代码"),
-    ("adversarial", "对抗", "对抗场景测试", "验证跳步、注入与禁用能力能否被代码级防线拦下"),
-    ("permission", "权限", "权限场景测试", "验证授权确认、默认收紧与来源不清的拒绝路径"),
-    ("fault", "故障", "故障场景测试", "验证异常输入 / 数据缺失 / 令牌过期时系统可控且不误判"),
+    ("normal", "正常", "(1)正常场景测试", "验证标准输入下核心能力按预期工作，建立可对比基线"),
+    ("boundary", "边界", "(2)边界场景测试", "验证临界值与三态口径，暴露判定口径而非擅自改代码"),
+    ("adversarial", "对抗", "(3)对抗场景测试", "验证跳步、注入与禁用能力能否被代码级防线拦下"),
+    ("permission", "权限", "(4)权限场景测试", "验证授权确认、默认收紧与来源不清的拒绝路径"),
+    ("fault", "故障", "(5)故障场景测试", "验证异常输入 / 数据缺失 / 令牌过期时系统可控且不误判"),
 ]
 
 
@@ -783,8 +785,8 @@ def render_plan_md() -> str:
           "## 六、执行与追溯", "",
           "| 项 | 内容 |", "| --- | --- |",
           "| 执行命令 | `python scripts/run_scenario_tests.py` |",
-          "| 结构化结果 | `docs/test-results/scenarios.json` |",
-          "| 分场景过程 | `docs/test-results/正常场景测试.docx` 等 5 份（含过程图） |",
+          "| 结构化结果 | `docs/scenarios.json` |",
+          "| 分场景过程 | `docs/(1)正常场景测试.docx` 等 5 份（含过程图） |",
           "| 回归基线 | `pytest tests/ -q`（23 passed）；`examples/demo.py` 30 样本回放退出码 0 |",
           "| 结果用途 | 演练评估与课程交付；不得作为实际业务指令（f40） |", "",
           "## 七、通过判据", "",
@@ -832,7 +834,7 @@ def main() -> None:
             safe_md(render_scenario_md(key, cn, title, purpose, cs, chart)), encoding="utf-8")
 
     # 方案与汇总（方案放 docs/ 根，便于交作业）
-    (ROOT / "docs" / "测试方案-五类场景.md").write_text(
+    (OUT / "测试方案-五类场景.md").write_text(
         safe_md(render_plan_md()), encoding="utf-8")
     (OUT / "测试执行汇总.md").write_text(safe_md(render_summary_md()), encoding="utf-8")
 
@@ -844,7 +846,7 @@ def main() -> None:
     print(f"输出目录：{OUT}")
     for key, cn, title, _ in SCENES:
         assert (OUT / f"{title}.md").exists() and (OUT / f"{title}.png").exists()
-    assert (ROOT / "docs" / "测试方案-五类场景.md").exists()
+    assert (OUT / "测试方案-五类场景.md").exists()
     print("自检通过：5 张图 + 6 份 md + scenarios.json")
     if f:
         print("失败用例：", [c["id"] for c in RESULTS if c["verdict"] == "FAIL"])

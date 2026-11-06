@@ -5,6 +5,7 @@
 输出：docs/流程图-现状.png、docs/流程图-数智化转型后.png
 """
 
+import os
 from pathlib import Path
 
 import matplotlib
@@ -16,8 +17,8 @@ matplotlib.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei"]
 matplotlib.rcParams["axes.unicode_minus"] = False
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "docs"
-OUT.mkdir(exist_ok=True)
+OUT = Path(os.environ.get("VENUE_DOCS_DIR") or (ROOT.parent / "docs"))
+OUT.mkdir(parents=True, exist_ok=True)
 
 # 配色（浅色主题）
 C_START = "#DDEBF7"   # 起止

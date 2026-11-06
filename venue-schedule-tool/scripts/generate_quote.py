@@ -20,10 +20,13 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "docs" / "报价方案.md"
+DOCS = Path(os.environ.get("VENUE_DOCS_DIR") or (ROOT.parent / "docs"))
+DOCS.mkdir(parents=True, exist_ok=True)
+OUT = DOCS / "报价方案.md"
 TAX_RATE = 0.06  # 增值税率，与既有报价单一致
 
 # ---------------------------------------------------------------------------

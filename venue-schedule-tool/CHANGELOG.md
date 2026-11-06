@@ -2,6 +2,23 @@
 
 本项目的所有重要变更都记录在这里。格式参考 Keep a Changelog，版本遵循语义化版本。
 
+## [0.6.0] - 2026-11-06 · 按课程清单重排为顶层 docs/ 平铺结构
+
+### 变更
+- 课程清单原图顶部标注 **`docs:`** —— 全部作业交付文档应平铺在**仓库顶层 `docs/`**。
+  原 `venue-schedule-tool/docs/`（含 `project-brief/`、`test-results/` 两个子目录）已整体迁移并删除。
+- 新增 `docs/README.md` 总索引，逐条映射清单 1–8 项与 Test 三项到具体文件名。
+- 5 份场景过程文档按清单命名：`(1)正常场景测试.docx` ～ `(5)故障场景测试.docx`（md / png 同名）。
+- `project-brief/README.md` → `docs/说明文件包索引.md`，避免与顶层总索引混淆。
+- 4 个生成脚本（`generate_briefs` / `generate_flowcharts` / `generate_quote` / `run_scenario_tests`）
+  输出目录改为仓库顶层 `docs/`，支持 `VENUE_DOCS_DIR` 环境变量覆盖（便于临时验证不污染交付目录）。
+- 8 份含路径引用的 docx 从更新后的 md 重新生成，5 份场景文档重新插图（各 1 张）。
+- README 目录树与路径约定、交付清单、需求定义、MVP 地址、测试方案内的路径引用同步更新。
+
+### 回归
+- 迁移逐文件 md5 校验；`docs/` 共 60 个文件，文本与 docx 内均无旧路径残留。
+- pytest 23 passed；30 样本回放退出码 0（f02）；Agent 三轨迹退出码 0；4 个生成脚本临时目录验证 rc=0。
+
 ## [0.5.0] - 2026-11-06 · 测试方案、可视化过程文档与 MVP 上线
 
 ### 新增
@@ -9,7 +26,7 @@
   真实调用 src/ 模块、逐条计时采集；一次执行 PASS 28 / KNOWN 1 / FAIL 0。
 - `docs/测试方案-五类场景.{md,docx}`：用例清单、量化指标定义、阈值、红线专项、
   已知口径与缺陷登记（K-01 闭区间端点、K-02 进撤场时长未叠加、K-03 缺列未做 schema 校验、K-04 待补来源）。
-- `docs/test-results/{正常,边界,对抗,权限,故障}场景测试.docx`：每份含逐条过程表、
+- `docs/(1)~(5) 各场景测试.docx`：每份含逐条过程表、
   实测输出、耗时、判定与一张「四阶段链路 + 逐条耗时判定」过程图；另存同名 .md / .png
   与结构化结果 `scenarios.json`、汇总 `测试执行汇总.md`。
 - `site/index.html` + `scripts/build_site.py`：静态 MVP 演示站点，浏览器内复现
@@ -57,7 +74,7 @@
 ## [0.3.0] - 2026-11-06
 
 ### 新增
-- 项目说明文件包 `docs/project-brief/`：6 套说明文件，每套同时提供 `json / md / csv`：
+- 项目说明文件包 `docs/`：6 套说明文件，每套同时提供 `json / md / csv`：
   六人访谈记录、项目基本简报（总纲）、客户简报、现状信息请求表、
   业务发现访谈问题库、利益相关者资料与分工；另附 `README.md` 索引。
 - 生成脚本 `scripts/generate_briefs.py`：以 `discovery-report.json` 为上游数据源，

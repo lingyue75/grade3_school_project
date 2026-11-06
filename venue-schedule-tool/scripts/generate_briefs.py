@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import re
 from collections import defaultdict
 from pathlib import Path
@@ -43,7 +44,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parent                       # venue-schedule-tool/
 WORKSPACE_DIR = PROJECT_DIR.parent                    # grade3_school_project/
 SRC_REPORT = WORKSPACE_DIR / "discovery-report.json"  # 上游演练系统生成的发现报告
-OUT_DIR = PROJECT_DIR / "docs" / "project-brief"      # 本脚本的输出目录
+OUT_DIR = Path(os.environ.get("VENUE_DOCS_DIR") or (WORKSPACE_DIR / "docs"))  # 仓库顶层 docs/（平铺）
 
 META = {
     "项目": "上海东浩会展经营有限公司 · 场馆排期与需求变更数智化转型试点",
@@ -60,7 +61,7 @@ META = {
     "数据来源": [
         "discovery-report.json / .md / .csv（业务需求发现报告，2026-10-23）",
         "dlg-venue-schedule-fde-training.md（FDE 全流程训练记录）",
-        "venue-schedule-tool/docs/Agent设计-工具与约束.md",
+        "docs/Agent设计-工具与约束.md",
     ],
     "证据覆盖": "15/36（42%）—— 未覆盖部分不得推断",
     "生成方式": "scripts/generate_briefs.py（单一数据源，重跑即可再生成）",
@@ -760,8 +761,8 @@ def build_readme():
     ] + [f"- {s}" for s in META["数据来源"]] + ["", "## 使用边界", "",
         "六人访谈完整不等于需求已确认；Brief（书面）与 Industry（行业）两来源仍缺失。",
         "演练结果不得作为实际业务指令（f40），正式结论须授权人员确认（f41）。", ""])
-    (OUT_DIR / "README.md").write_text(text, encoding="utf-8")
-    print("  README.md: 索引与格式约定")
+    (OUT_DIR / "说明文件包索引.md").write_text(text, encoding="utf-8")
+    print("  说明文件包索引.md: 索引与格式约定")
 
 
 # ---------------------------------------------------------------------------

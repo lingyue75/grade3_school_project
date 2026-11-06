@@ -10,8 +10,17 @@
 - 验收口径（f02）：回放 **30 个档期样本**，识别全部已标注冲突且说明原因，每条结果附来源与人工复核记录。
 - 关键人物映射：顾明岚=业务负责人（范围决定权）；林亦舟=一线服务专员；唐映秋=项目流程协调员；秦芮=数字化工程师（数据与只读接口）；傅景=审核与质量负责人（**停止试点权**）；叶书=客户协同代表。
 
-## 交付包结构
-`venue-schedule-tool/`（按 GitHub `my-tool/` 框架）：src 主目录 + docs（4 份客户交付物 + 2 张流程图）+ tests + examples + scripts + config + data + .github。
+## 交付包结构（2026-11-06 用户确认：顶层 docs/ 全部平铺）
+- **★ 课程清单原图顶部写的是 `docs:`**：所有作业交付文档平铺在**仓库根 `docs/`**，无子目录。
+  总索引 `docs/README.md`；`venue-schedule-tool/docs/` 及其 `project-brief/`、`test-results/` 子目录已删除，不要再建回去。
+- 清单 1–8 项 + Test 三项全部在 `docs/`：六人访谈三格式、基本简报四件套、典型事件 txt+docx、
+  行业分析、两张流程图、需求定义、设计方案、报价方案、测试方案、
+  `(1)正常场景测试.docx` ～ `(5)故障场景测试.docx`、MVP 上线地址。
+- 说明文件包 6 套 × json/md/csv 也在 `docs/` 平铺，索引为 `docs/说明文件包索引.md`。
+- `venue-schedule-tool/` 只放工程代码：src / tests / examples / scripts / config / data / site / .github。
+  4 个生成脚本输出写入顶层 `docs/`，可用环境变量 `VENUE_DOCS_DIR` 改到临时目录做验证。
+- 单一数据源约定不变：改内容改脚本重跑（`generate_briefs.py` 等），不手改单个格式文件；
+  CSV 用 `utf-8-sig`；docx 由同名 md 经本地编辑器转换，场景文档需另行插图。
 
 ## ★ 主项目 vs 样例（重要，别搞混）
 - **主项目 = `venue-schedule-tool/`（场馆排期与需求变更）**，所有正式工作围绕它。

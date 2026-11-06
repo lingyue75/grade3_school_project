@@ -59,7 +59,7 @@ pytest tests/ -v
 
 ## 项目说明文件（六人访谈 + 基本简报）
 
-`docs/project-brief/` 存放项目说明材料，**每套各有 json / md / csv 三种格式**：
+`docs/` 存放项目说明材料，**每套各有 json / md / csv 三种格式**：
 
 | 说明文件 | 内容 | 三格式 |
 | --- | --- | --- |
@@ -75,7 +75,7 @@ pytest tests/ -v
 python scripts/generate_briefs.py
 ```
 
-入口见 `docs/project-brief/README.md`。所有文件自带演练虚构声明；CSV 为 `utf-8-sig` 编码。
+入口见 `docs/说明文件包索引.md`。所有文件自带演练虚构声明；CSV 为 `utf-8-sig` 编码。
 
 ## 今日完整流程 · 8 项交付包
 
@@ -83,8 +83,8 @@ python scripts/generate_briefs.py
 
 | # | 交付物 | 关键文件 |
 | --- | --- | --- |
-| 1 | 六人访谈记录 | `project-brief/六人访谈记录.{md,json,csv}` |
-| 2 | 项目基本简报四件套 | `项目基本简报-四件套.zip` + `project-brief/` |
+| 1 | 六人访谈记录 | `docs/六人访谈记录.{md,json,csv}` |
+| 2 | 项目基本简报四件套 | `项目基本简报-四件套.zip`（解压为 4 个 md）；完整三格式见 `docs/` |
 | 3 | 典型事件访谈 | `典型事件访谈记录.txt`、`典型事件访谈整理.docx` |
 | 4 | 行业分析 | `行业分析-会展场馆数智化转型.{md,docx}` |
 | 5 | 改造前 / 后流程图 | `流程图-现状.png`、`流程图-数智化转型后.png`（融入典型事件） |
@@ -103,8 +103,8 @@ python scripts/generate_quote.py        # 报价方案 md
 | 项 | 文件 / 地址 |
 | --- | --- |
 | 五类场景测试方案 | `docs/测试方案-五类场景.{md,docx}`（29 条用例、量化阈值、通过判据） |
-| 可视化测试过程 | `docs/test-results/{正常,边界,对抗,权限,故障}场景测试.docx`（各含过程图） |
-| 结构化实测结果 | `docs/test-results/scenarios.json`；5 张场景 PNG |
+| 可视化测试过程 | `docs/(1)~(5) 各场景测试.docx`（各含过程图） |
+| 结构化实测结果 | `docs/scenarios.json`；5 张场景 PNG |
 | 测试执行器 | `scripts/run_scenario_tests.py`（真实调用 src/，无 mock） |
 | **MVP 上线地址** | **https://venue-schedule-mvp.app.workbuddy.host/?sharecode=4KSZQPBMRT** |
 | 部署说明 | `docs/MVP上线部署地址.{md,docx}` |
@@ -119,32 +119,32 @@ python scripts/build_site.py           # 重建 site/index.html（改数据或�
 
 ## 目录结构
 
+> **路径约定**：全部作业交付文档平铺在**仓库顶层 `docs/`**（与本目录 `venue-schedule-tool/` 平级），
+> 不再有 `project-brief/`、`test-results/` 等子目录。下文与表格中的 `docs/xxx` 一律指仓库顶层 docs/。
+> 总索引见 `docs/README.md`。
+
 ```
-venue-schedule-tool/
-├── README.md          # 本文件
-├── LICENSE            # MIT
-├── .gitignore
-├── CHANGELOG.md       # 版本记录
-├── CONTRIBUTING.md    # 贡献指南
-├── requirements.txt   # 依赖清单
-├── src/venue_schedule_tool/
-│   ├── main.py        # 程序入口（CLI 回放）
-│   ├── core/          # 冲突检测 / 统一编号 / 复核留痕
-│   ├── agent/         # Agent 工具与编排（只提示、不锁档）
-│   └── utils/         # 样例数据读写
-├── docs/
-│   ├── project-brief/ # ★ 说明文件包：6 套 × 3 格式（json/md/csv）+ 索引
-│   ├── test-results/  # 5 份场景过程文档 + 5 张图 + scenarios.json
-│   └── ...            # 交付清单、典型事件访谈、需求定义、报价方案、
-│                      # 测试方案、MVP 上线部署地址、行业分析、设计方案、流程图
-├── site/index.html    # MVP 静态演示站点（已上线）
-├── tests/             # pytest 测试
-├── examples/          # 30 样本回放 demo、Agent 三条轨迹
-├── scripts/           # generate_briefs / generate_quote / generate_flowcharts /
-│                      # run_scenario_tests / build_site、构建与部署脚本
-├── config/            # 默认参数
-├── data/              # 30 个档期样本 + 交接记录（合成演练数据）
-└── .github/           # CI、Issue/PR 模板
+grade3_school_project/
+├── docs/              # ★ 仓库顶层：全部作业交付文档（平铺，见 docs/README.md）
+│                      #   清单 1-8 项 + Test 三项：六人访谈三格式、基本简报四件套、
+│                      #   典型事件访谈、行业分析、两张流程图、需求定义、设计方案、
+│                      #   报价方案、测试方案、(1)~(5) 场景测试 docx、MVP 上线地址
+├── venue-schedule-tool/        # 工程代码（my-tool 框架）
+│   ├── README.md              # 本文件
+│   ├── CHANGELOG.md           # 版本记录
+│   ├── src/venue_schedule_tool/
+│   │   ├── main.py            # 程序入口（CLI 回放）
+│   │   ├── core/              # 冲突检测 / 统一编号 / 复核留痕
+│   │   ├── agent/             # Agent 工具与编排（只提示、不锁档）
+│   │   └── utils/             # 样例数据读写
+│   ├── site/index.html        # MVP 静态演示站点（已上线）
+│   ├── tests/                 # pytest 测试
+│   ├── examples/              # 30 样本回放 demo、Agent 三条轨迹
+│   ├── scripts/               # 全部生成脚本（输出写入仓库顶层 docs/）
+│   ├── config/                # 默认参数
+│   ├── data/                  # 30 档期样本 + 交接记录（合成演练数据）
+│   └── .github/               # CI、Issue/PR 模板
+└── sample/expense-agent/      # 报销助手（演练样例，仅流程参考）
 ```
 
 ## 验收口径（f02）
