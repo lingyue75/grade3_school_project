@@ -57,6 +57,26 @@ pytest tests/ -v
 无来源（f40）不得发变更请求；`missing` 状态只报"数据不完整"（f31）；
 正式结论只能由授权人员（傅景/顾明岚）作出（f41）。详见 `docs/Agent设计-工具与约束.md`。
 
+## 项目说明文件（六人访谈 + 基本简报）
+
+`docs/project-brief/` 存放项目说明材料，**每套各有 json / md / csv 三种格式**：
+
+| 说明文件 | 内容 | 三格式 |
+| --- | --- | --- |
+| 六人访谈记录 | 顾明岚、林亦舟、唐映秋、秦芮、傅景、叶书共 6 人、16 轮逐字稿 | `.json` `.md` `.csv` |
+| 项目基本简报（总纲） | 速览、六条关键发现、三条红线、验收口径、文件索引 | `.json` `.md` `.csv` |
+| 客户简报 | 背景、诉求、范围、验收、红线、治理、待补材料 | `.json` `.md` `.csv` |
+| 现状信息请求表 | 36 条待补信息：用途、提供方、状态、优先级 | `.json` `.md` `.csv` |
+| 业务发现访谈问题库 | 31 题，区分已问 / 待问 / 陷阱题 | `.json` `.md` `.csv` |
+| 利益相关者资料与分工 | 六人资料、决策链、RACI、异常升级与停止条件 | `.json` `.md` `.csv` |
+
+```bash
+# 重新生成（单一数据源，改内容请改脚本后重跑，勿手改单个格式文件）
+python scripts/generate_briefs.py
+```
+
+入口见 `docs/project-brief/README.md`。所有文件自带演练虚构声明；CSV 为 `utf-8-sig` 编码。
+
 ## 目录结构
 
 ```
@@ -70,11 +90,14 @@ venue-schedule-tool/
 ├── src/venue_schedule_tool/
 │   ├── main.py        # 程序入口（CLI 回放）
 │   ├── core/          # 冲突检测 / 统一编号 / 复核留痕
+│   ├── agent/         # Agent 工具与编排（只提示、不锁档）
 │   └── utils/         # 样例数据读写
-├── docs/              # 业务挖掘报告、行业分析、设计方案、报价单、流程图
+├── docs/
+│   ├── project-brief/ # ★ 说明文件包：6 套 × 3 格式（json/md/csv）+ 索引
+│   └── ...            # 业务挖掘报告、行业分析、设计方案、报价单、流程图、Agent 设计
 ├── tests/             # pytest 测试
-├── examples/demo.py   # 30 样本回放 demo
-├── scripts/           # 构建 / 部署脚本
+├── examples/          # 30 样本回放 demo、Agent 三条轨迹
+├── scripts/           # generate_briefs.py、构建 / 部署脚本
 ├── config/            # 默认参数
 ├── data/              # 30 个档期样本 + 交接记录（合成演练数据）
 └── .github/           # CI、Issue/PR 模板
